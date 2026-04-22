@@ -1,13 +1,13 @@
 name: Test
 permissions:
   contents: read
-"on":
-  pull_request: {}
+on:
+  pull_request:
   push:
     branches:
       - main
-  merge_group: {}
-  workflow_dispatch: {}
+  merge_group:
+  workflow_dispatch:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
