@@ -200,8 +200,7 @@ class RideHistoryParser:
                 name, value = result
                 fields[name] = value
 
-        ride = self._build_ride(fields)
-        if ride:
+        if ride := self._build_ride(fields):
             return ride
 
         # 2. Positional/summary parsing fallback
@@ -224,8 +223,7 @@ class RideHistoryParser:
                     "return_station": lines[i + 4],
                     "return_time": lines[i + 5],
                 }
-                ride = self._build_ride(fields)
-                if ride:
+                if ride := self._build_ride(fields):
                     return ride
 
         return None
