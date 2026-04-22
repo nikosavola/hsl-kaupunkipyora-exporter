@@ -1,4 +1,4 @@
-"""Tests for station lookup and fuzzy matching."""
+"""Tests for station lookup."""
 
 import pytest
 
@@ -34,14 +34,6 @@ def test_leading_trailing_whitespace(_make_stations: list[Station]) -> None:
     s = lookup.find("  Hakaniemi  ")
     assert s is not None
     assert s.name == "Hakaniemi"
-
-
-def test_fuzzy_match(_make_stations: list[Station]) -> None:
-    lookup = StationLookup(_make_stations)
-    # Slight misspelling
-    s = lookup.find("Sörnäisten metroasem")
-    assert s is not None
-    assert s.name == "Sörnäisten metroasema"
 
 
 def test_no_match_returns_none(_make_stations: list[Station]) -> None:

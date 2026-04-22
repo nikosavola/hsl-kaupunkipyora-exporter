@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import difflib
 import json
 import logging
 import os
 import urllib.request
+from collections.abc import Generator, Iterable
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -35,12 +35,7 @@ class Station:
     lon: float
 
 
-# ---------------------------------------------------------------------------
-# Fetching / caching
-# ---------------------------------------------------------------------------
-
-
-def fetch_stations(api_key: str | None = None) -> list[Station]:
+def fetch_stations(api_key: str | None = None) -> Generator[Station, None, None]:
     """Download the current station list from the Digitransit API."""
     api_key = api_key or os.environ.get("DIGITRANSIT_API_KEY")
     headers = {"Content-Type": "application/json"}
@@ -66,7 +61,8 @@ def fetch_stations(api_key: str | None = None) -> list[Station]:
         raise
 
     raw = body["data"]["vehicleRentalStations"]
-    return [Station(name=s["name"], lat=s["lat"], lon=s["lon"]) for s in raw]
+    for s in raw:
+        yield Station(name=s["name"], lat=s["lat"], lon=s["lon"])
 
 
 def _save_cache(stations: list[Station]) -> None:
@@ -105,27 +101,20 @@ def get_stations(refresh: bool = False, api_key: str | None = None) -> list[Stat
             return cached
 
     logger.info("Downloading station list from Digitransit …")
-    stations = fetch_stations(api_key=api_key)
+    stations = list(fetch_stations(api_key=api_key))
     _save_cache(stations)
     return stations
 
 
-# ---------------------------------------------------------------------------
-# Station name → coordinate lookup
-# ---------------------------------------------------------------------------
-
-
 class StationLookup:
-    """Map station names to coordinates with fuzzy-matching fallback."""
+    """Map station names to coordinates."""
 
-    def __init__(self, stations: list[Station]) -> None:
+    def __init__(self, stations: Iterable[Station]) -> None:
         """Initialize the lookup table with a list of stations."""
         self._by_name: dict[str, Station] = {}
-        self._names: list[str] = []
         for s in stations:
             key = self._normalise(s.name)
             self._by_name[key] = s
-            self._names.append(key)
 
     @staticmethod
     def _normalise(name: str) -> str:
@@ -133,22 +122,10 @@ class StationLookup:
         return name.strip().lower()
 
     def find(self, name: str) -> Station | None:
-        """Look up *name*, falling back to fuzzy matching.
+        """Look up *name*.
 
         Returns:
-            The station if found, or None if no match above the similarity threshold is found.
+            The station if found, or None.
         """
         key = self._normalise(name)
-        # Exact match
-        if key in self._by_name:
-            return self._by_name[key]
-
-        # Fuzzy match (uses stdlib difflib — no extra dependency)
-        matches = difflib.get_close_matches(key, self._names, n=1, cutoff=0.6)
-        if matches:
-            best = matches[0]
-            station = self._by_name[best]
-            logger.info("Fuzzy-matched '%s' → '%s'", name, station.name)
-            return station
-
-        return None
+        return self._by_name.get(key)
