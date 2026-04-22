@@ -36,8 +36,10 @@ The exporter supports three distinct modes for handling geographic data:
    trackpoints. This is the most accurate way to record kilometers in Strava without guessing the path.
 1. **Linear Path (`--linear`)**: Includes a simple two-point straight line between the departure and return stations.
    Useful if you want a basic map visualization.
-1. **Routed Path (`--use-route`)**: Fetches the suggested cycling route from the [Digitransit API](https://digitransit.fi/en/developers/apis/). This provides a
-   realistic path on the map and preserves HSL distance data (when using TCX). Requires a [free API key](https://digitransit.fi/en/developers/api-registration/).
+1. **Routed Path (`--use-route`)**: Fetches the suggested cycling route from the
+   [Digitransit API](https://digitransit.fi/en/developers/apis/). This provides a realistic path on the map and
+   preserves HSL distance data (when using TCX). Requires a
+   [free API key](https://digitransit.fi/en/developers/api-registration/).
 
 ### Options
 
