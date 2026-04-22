@@ -20,9 +20,17 @@ hsl-kaupunkipyora-exporter rides.txt
 
 ## Web App
 
-A browser-based version is available at the [GitHub Pages site](https://nikosavola.github.io/hsl-kaupunkipyora-exporter/).
-Upload your ride history HTML file or paste the text, pick your options, and download the resulting files — no
-installation required. The web app runs entirely in your browser using [Pyodide](https://pyodide.org).
+A browser-based version is available at the
+[GitHub Pages site](https://nikosavola.github.io/hsl-kaupunkipyora-exporter/). Upload your ride history HTML file or
+paste the text, pick your options, and download the resulting files — no installation required. The web app runs
+entirely in your browser using [Pyodide](https://pyodide.org).
+
+The browser build reuses the same Python modules as the CLI — it installs the project wheel into Pyodide and calls the
+shared `RideHistoryParser` and writers from a thin adapter. Run it locally with:
+
+```bash
+just serve-web  # builds the wheel and serves http://localhost:8000/
+```
 
 ## Usage
 

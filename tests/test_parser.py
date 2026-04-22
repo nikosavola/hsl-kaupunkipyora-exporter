@@ -123,6 +123,20 @@ def test_parse_html_wraps_text(parser: RideHistoryParser) -> None:
     assert rides[0].departure_station == "Kaivopuisto"
 
 
+def test_parse_content_detects_text(parser: RideHistoryParser) -> None:
+    rides = parser.parse_content(SAMPLE_TEXT)
+    assert len(rides) == EXPECTED_RIDE_COUNT
+
+
+def test_parse_content_detects_html(parser: RideHistoryParser) -> None:
+    html = (
+        f"<html><body><div>{SAMPLE_TEXT.replace(chr(10), '<br/>')}</div></body></html>"
+    )
+    rides = parser.parse_content(html)
+    assert len(rides) == EXPECTED_RIDE_COUNT
+    assert rides[0].departure_station == "Kaivopuisto"
+
+
 def test_ride_str() -> None:
     r = Ride(
         departure_station="A",

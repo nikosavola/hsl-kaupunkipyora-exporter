@@ -44,3 +44,20 @@ test *args:
 build:
     @rm -rf dist
     uv build
+
+# Build the pure-Python wheel and stage it for the browser app
+[group('build')]
+build-web:
+    @rm -rf dist web/dist
+    uv build --wheel
+    @mkdir -p web/dist
+    @cp dist/*.whl web/dist/
+    @wheel_name=$(basename dist/*.whl); \
+        printf '{\n  "wheel": "%s"\n}\n' "$wheel_name" > web/dist/manifest.json
+    @echo "Wheel staged to web/dist/ (see web/dist/manifest.json)."
+
+# Serve the web app locally (builds first). Requires Python 3.
+[group('build')]
+serve-web port="8000": build-web
+    @echo "Serving http://localhost:{{ port }}/  (Ctrl+C to stop)"
+    @cd web && python3 -m http.server {{ port }}

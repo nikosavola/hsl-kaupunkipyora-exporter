@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import xml.etree.ElementTree as ET  # noqa: S405
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 from haversine import haversine
@@ -25,22 +24,21 @@ MIN_ROUTE_POINTS = 2
 class TCXWriter(BaseRideWriter):
     """Writer for TCX format."""
 
+    EXTENSION = "tcx"
+
     @override
-    def write(
+    def build(
         self,
         ride: Ride,
         departure_coords: Station,
         return_coords: Station,
         route_points: list[Point] | None = None,
         include_points: bool = True,
-    ) -> Path:
-        """Export a single ride as a TCX file."""
-        tcx_str = self._build_tcx(
+    ) -> str:
+        """Build a TCX XML string for a single ride."""
+        return self._build_tcx(
             ride, departure_coords, return_coords, route_points, include_points
         )
-        path = self.output_dir / self._safe_filename(ride, "tcx")
-        path.write_text(tcx_str, encoding="utf-8")
-        return path
 
     @staticmethod
     def _add_trackpoint(

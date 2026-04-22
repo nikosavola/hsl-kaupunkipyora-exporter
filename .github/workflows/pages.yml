@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - "web/**"
+      - "src/**"
+      - "pyproject.toml"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +31,19 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
+
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+
+      - name: Build wheel and stage into web/dist
+        run: |
+          rm -rf dist web/dist
+          uv build --wheel
+          mkdir -p web/dist
+          cp dist/*.whl web/dist/
+          wheel_name=$(basename dist/*.whl)
+          printf '{\n  "wheel": "%s"\n}\n' "$wheel_name" > web/dist/manifest.json
+          cat web/dist/manifest.json
+
       # v5
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
       # v5

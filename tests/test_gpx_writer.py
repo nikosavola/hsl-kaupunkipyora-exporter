@@ -95,3 +95,22 @@ def test_gpx_summary_only(gpx_writer: GPXWriter) -> None:
     gpx = gpx_writer._build_gpx(_sample_ride(), DEP, RET, include_points=False)
     # Track exists but has no segments
     assert len(gpx.tracks[0].segments) == 0
+
+
+def test_build_returns_str_without_output_dir() -> None:
+    """The public build() method works without a filesystem destination."""
+    writer = GPXWriter()
+    xml = writer.build(_sample_ride(), DEP, RET)
+    assert isinstance(xml, str)
+    assert "<trk>" in xml
+
+
+def test_write_without_output_dir_raises() -> None:
+    writer = GPXWriter()
+    with pytest.raises(ValueError, match="output_dir"):
+        writer.write(_sample_ride(), DEP, RET)
+
+
+def test_filename_for_uses_extension() -> None:
+    name = GPXWriter().filename_for(_sample_ride())
+    assert name.endswith(".gpx")
