@@ -1,10 +1,7 @@
-# hsl-kaupunkipyora-exporter
+# HSL Kaupunkipyörä Exporter
 
 Parse your [HSL City Bike](https://www.hsl.fi/en/my-information/citybikes/ride-history) ride history and export each
 ride as a Strava-compatible TCX or GPX file.
-
-This is a convenient way to add your **Alepa Fillari** kilometers to [Kilometrikisa](https://www.kilometrikisa.fi/) by
-importing your rides into Strava first.
 
 ## Installation
 
@@ -14,10 +11,10 @@ Requires Python 3.13+. The easiest way to run the tool is via [`uvx`](https://do
 uvx hsl-kaupunkipyora-exporter rides.txt
 ```
 
-Or install with `uv` / `pip`:
+Or install with `pip`:
 
 ```bash
-uv pip install hsl-kaupunkipyora-exporter
+pip install hsl-kaupunkipyora-exporter
 hsl-kaupunkipyora-exporter rides.txt
 ```
 
@@ -28,7 +25,7 @@ hsl-kaupunkipyora-exporter rides.txt
 1. Run the exporter:
 
 ```bash
-hsl-kaupunkipyora-exporter rides.html -o my_rides/
+uvx hsl-kaupunkipyora-exporter rides.html
 ```
 
 ### Path Modes
@@ -39,10 +36,8 @@ The exporter supports three distinct modes for handling geographic data:
    trackpoints. This is the most accurate way to record kilometers in Strava without guessing the path.
 1. **Linear Path (`--linear`)**: Includes a simple two-point straight line between the departure and return stations.
    Useful if you want a basic map visualization.
-1. **Routed Path (`--use-route`)**: Fetches the suggested cycling route from the Digitransit API. This provides a
-   realistic path on the map and preserves HSL distance data (when using TCX). Requires a free API key.
-
-Note: `--linear` and `--use-route` are mutually exclusive.
+1. **Routed Path (`--use-route`)**: Fetches the suggested cycling route from the [Digitransit API](https://digitransit.fi/en/developers/apis/). This provides a
+   realistic path on the map and preserves HSL distance data (when using TCX). Requires a [free API key](https://digitransit.fi/en/developers/api-registration/).
 
 ### Options
 
@@ -80,7 +75,14 @@ To use the actual cycling route suggested by HSL, you need a Digitransit API key
 uvx hsl-kaupunkipyora-exporter rides.txt --use-route --api-key your_key_here
 ```
 
+### Kilometrikisa
+
+This is a convenient way to add your **Alepa Fillari** kilometers to [Kilometrikisa](https://www.kilometrikisa.fi/) by
+importing your rides into Strava first.
+
 ## Development
+
+Use [`just`](https://github.com/casey/just) to run tasks.
 
 ```bash
 git clone https://github.com/nikosavola/hsl-kaupunkipyora-exporter.git
@@ -88,7 +90,3 @@ cd hsl-kaupunkipyora-exporter
 just install
 just test
 ```
-
-## License
-
-Apache 2.0 – see [LICENSE](LICENSE).
