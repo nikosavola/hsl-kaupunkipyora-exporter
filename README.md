@@ -18,6 +18,12 @@ pip install hsl-kaupunkipyora-exporter
 hsl-kaupunkipyora-exporter rides.txt
 ```
 
+## Web App
+
+A browser-based version is available at the [GitHub Pages site](https://nikosavola.github.io/hsl-kaupunkipyora-exporter/).
+Upload your ride history HTML file or paste the text, pick your options, and download the resulting files — no
+installation required. The web app runs entirely in your browser using [Pyodide](https://pyodide.org).
+
 ## Usage
 
 1. Open your ride history at <https://www.hsl.fi/en/my-information/citybikes/ride-history>.
