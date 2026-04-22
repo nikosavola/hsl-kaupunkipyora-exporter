@@ -657,7 +657,7 @@ def process_rides(content, stations_json, fmt, include_points):
     stations_data = json.loads(stations_json)
     stations = [Station(name=s["name"], lat=s["lat"], lon=s["lon"]) for s in stations_data]
     lookup = StationLookup(stations)
-    jslog(f"Station lookup initialised with {len(stations)} station(s).")
+    jslog(f"Station lookup initialized with {len(stations)} station(s).")
 
     results = []
     skipped = 0
@@ -779,7 +779,7 @@ async function initPyodide() {
     exportBtn.disabled = false;
     exportBtnText.textContent = "Export rides";
   } catch (err) {
-    log("Failed to initialise Pyodide: " + err, "error");
+    log("Failed to initialize Pyodide: " + err, "error");
     exportBtnText.textContent = "Pyodide failed";
   }
 }
