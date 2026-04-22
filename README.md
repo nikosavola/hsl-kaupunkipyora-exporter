@@ -1,5 +1,9 @@
 # HSL Kaupunkipyörä Exporter
 
+[![en](https://img.shields.io/badge/lang-en-red.svg)](./README.md)
+[![fi](https://img.shields.io/badge/lang-fi-blue.svg)](./README.fi.md)
+[![sv](https://img.shields.io/badge/lang-sv-yellow.svg)](./README.sv.md)
+
 Parse your [HSL City Bike](https://www.hsl.fi/en/my-information/citybikes/ride-history) ride history and export each
 ride as a Strava-compatible TCX or GPX file.
 
