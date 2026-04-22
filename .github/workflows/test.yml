@@ -47,10 +47,7 @@ jobs:
       - name: Test with pytest
         run: |
           just test ${{ (github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest')
-            && '--cov=hsl_kaupunkipyora_exporter --cov-report=html --cov-report=xml' || '' }}
-      - name: Generate coverage badge
-        if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
-        run: uv run --group dev --group github genbadge coverage -i coverage.xml -o htmlcov/coverage.svg
+            && '--cov=hsl_kaupunkipyora_exporter --cov-report=html' || '' }}
       - name: Upload coverage report
         if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
         # v7
