@@ -50,6 +50,7 @@ lint = ["prek"]
 test = [
   "hypothesis",
   "pytest>=9.0.0",
+  "pytest-cov",
   "pytest-xdist",
 ]
 
