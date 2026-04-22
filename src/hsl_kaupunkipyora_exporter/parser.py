@@ -87,8 +87,17 @@ class RideHistoryParser:
             A list of extracted Ride objects.
         """
         content = Path(path).read_text(encoding="utf-8")
+        return self.parse_content(content)
 
-        # Detect HTML or HTML fragments
+    def parse_content(self, content: str) -> list[Ride]:
+        """Auto-detect HTML or text and return the rides it contains.
+
+        Args:
+            content: Raw file contents as a string.
+
+        Returns:
+            A list of extracted Ride objects.
+        """
         if re.search(r"<\s*(html|div|ul|li|p)[\s>]", content, re.IGNORECASE):
             return self.parse_html(content)
         return self.parse_text(content)

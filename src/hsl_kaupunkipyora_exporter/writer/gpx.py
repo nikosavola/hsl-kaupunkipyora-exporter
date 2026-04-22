@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC
-from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 import gpxpy.gpx
@@ -25,22 +24,21 @@ MIN_ROUTE_POINTS = 2
 class GPXWriter(BaseRideWriter):
     """Writer for GPX format."""
 
+    EXTENSION = "gpx"
+
     @override
-    def write(
+    def build(
         self,
         ride: Ride,
         departure_coords: Station,
         return_coords: Station,
         route_points: list[Point] | None = None,
         include_points: bool = True,
-    ) -> Path:
-        """Export a single ride as a GPX file."""
-        gpx = self._build_gpx(
+    ) -> str:
+        """Build a GPX XML string for a single ride."""
+        return self._build_gpx(
             ride, departure_coords, return_coords, route_points, include_points
-        )
-        path = self.output_dir / self._safe_filename(ride, "gpx")
-        path.write_text(gpx.to_xml(), encoding="utf-8")
-        return path
+        ).to_xml()
 
     def _build_gpx(
         self,
