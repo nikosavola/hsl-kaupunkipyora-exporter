@@ -1,0 +1,97 @@
+"""Tests for GPX generation."""
+
+from datetime import UTC, datetime
+from pathlib import Path
+
+import gpxpy
+import pytest
+
+from hsl_kaupunkipyora_exporter.parser import Ride
+from hsl_kaupunkipyora_exporter.routing import Point
+from hsl_kaupunkipyora_exporter.stations import Station
+from hsl_kaupunkipyora_exporter.writer import GPXWriter
+
+
+def _sample_ride() -> Ride:
+    return Ride(
+        departure_station="Kaivopuisto",
+        departure_time=datetime(2024, 6, 1, 14, 30),
+        return_station="Hakaniemi",
+        return_time=datetime(2024, 6, 1, 14, 45),
+    )
+
+
+DEP = Station(name="Kaivopuisto", lat=60.1575, lon=24.9502)
+RET = Station(name="Hakaniemi", lat=60.1790, lon=24.9508)
+
+EXPECTED_POINT_COUNT = 2
+ROUTE_POINT_COUNT = 3
+MIDPOINT_MINUTE = 37
+MIDPOINT_LAT = 60.15
+
+
+@pytest.fixture
+def gpx_writer(tmp_path: Path) -> GPXWriter:
+    return GPXWriter(tmp_path)
+
+
+def test_gpx_has_two_points(gpx_writer: GPXWriter) -> None:
+    gpx = gpx_writer._build_gpx(_sample_ride(), DEP, RET)
+    points = gpx.tracks[0].segments[0].points
+    assert len(points) == EXPECTED_POINT_COUNT
+
+
+def test_gpx_coordinates(gpx_writer: GPXWriter) -> None:
+    gpx = gpx_writer._build_gpx(_sample_ride(), DEP, RET)
+    pts = gpx.tracks[0].segments[0].points
+    assert pts[0].latitude == pytest.approx(DEP.lat)
+    assert pts[0].longitude == pytest.approx(DEP.lon)
+    assert pts[1].latitude == pytest.approx(RET.lat)
+    assert pts[1].longitude == pytest.approx(RET.lon)
+
+
+def test_gpx_timestamps_are_utc(gpx_writer: GPXWriter) -> None:
+    gpx = gpx_writer._build_gpx(_sample_ride(), DEP, RET)
+    pts = gpx.tracks[0].segments[0].points
+    assert pts[0].time is not None
+    assert pts[0].time.tzinfo == UTC
+
+
+def test_gpx_track_type_is_cycling(gpx_writer: GPXWriter) -> None:
+    gpx = gpx_writer._build_gpx(_sample_ride(), DEP, RET)
+    assert gpx.tracks[0].type == "cycling"
+
+
+def test_gpx_xml_is_valid(gpx_writer: GPXWriter) -> None:
+    gpx = gpx_writer._build_gpx(_sample_ride(), DEP, RET)
+    xml = gpx.to_xml()
+    parsed = gpxpy.parse(xml)
+    assert len(parsed.tracks) == 1
+
+
+def test_write_gpx_creates_file(gpx_writer: GPXWriter) -> None:
+    path = gpx_writer.write(_sample_ride(), DEP, RET)
+    assert path.exists()
+    assert path.suffix == ".gpx"
+    content = path.read_text(encoding="utf-8")
+    assert "<trk>" in content
+
+
+def test_gpx_with_route_points(gpx_writer: GPXWriter) -> None:
+    # 3 points: A, middle, B
+    route = [Point(60.1, 24.9), Point(MIDPOINT_LAT, 24.95), Point(60.2, 25.0)]
+    ride = _sample_ride()
+    # Ride is 15 mins (14:30 to 14:45)
+    gpx = gpx_writer._build_gpx(ride, DEP, RET, route_points=route)
+    pts = gpx.tracks[0].segments[0].points
+
+    assert len(pts) == ROUTE_POINT_COUNT
+    # Middle point should have timestamp halfway (14:37:30)
+    assert pts[1].time.minute == MIDPOINT_MINUTE
+    assert pts[1].latitude == pytest.approx(MIDPOINT_LAT)
+
+
+def test_gpx_summary_only(gpx_writer: GPXWriter) -> None:
+    gpx = gpx_writer._build_gpx(_sample_ride(), DEP, RET, include_points=False)
+    # Track exists but has no segments
+    assert len(gpx.tracks[0].segments) == 0
