@@ -86,20 +86,30 @@ importing your rides into Strava first.
 
 ```mermaid
 graph TD
-    A[HSL Ride History<br/>HTML or Text] --> B(RideHistoryParser)
-    B --> C{StationLookup}
-    C -- Coordinates Found --> D{Path Mode?}
-    C -- Not Found --> E[Skip Ride]
+    classDef input fill:#4A90D9,stroke:#2171B5,color:#fff
+    classDef parser fill:#E67E22,stroke:#CA6F1E,color:#fff
+    classDef lookup fill:#8E44AD,stroke:#7D3C98,color:#fff
+    classDef decision fill:#FDEBD0,stroke:#E67E22,color:#000
+    classDef skip fill:#E74C3C,stroke:#CB4335,color:#fff
+    classDef pathNode fill:#A9DFBF,stroke:#27AE60,color:#000
+    classDef api fill:#76D7C4,stroke:#16A085,color:#000
+    classDef writer fill:#5DADE2,stroke:#2980B9,color:#fff
+    classDef output fill:#2ECC71,stroke:#27AE60,color:#000
 
-    D -- Default --> F[Summary Only]
-    D -- "--linear" --> G[Linear Path]
-    D -- "--use-route" --> H[fetch_route via Digitransit API]
+    A[HSL Ride History<br/>HTML or Text]:::input --> B(RideHistoryParser<br/>Parses HTML & plain-text<br/>ride history files):::parser
+    B --> C{StationLookup<br/>Resolves station names<br/>to GPS coordinates}:::lookup
+    C -- Coordinates Found --> D{Path Mode?}:::decision
+    C -- Not Found --> E[Skip Ride]:::skip
 
-    F --> I(TCX/GPX Writer)
+    D -- Default --> F[Summary Only<br/>Exact HSL distance &<br/>duration, no GPS points]:::pathNode
+    D -- "--linear" --> G[Linear Path<br/>Straight line between<br/>departure & return stations]:::pathNode
+    D -- "--use-route" --> H[fetch_route<br/>Fetches cycling route<br/>via Digitransit GraphQL API]:::api
+
+    F --> I(TCX/GPX Writer<br/>Serialises rides into<br/>Strava-compatible files):::writer
     G --> I
     H --> I
 
-    I --> J[Strava-compatible<br/>TCX or GPX files]
+    I --> J[Strava-compatible<br/>TCX or GPX files]:::output
 ```
 
 ## Development
