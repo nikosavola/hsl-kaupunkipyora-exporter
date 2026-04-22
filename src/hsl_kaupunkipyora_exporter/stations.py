@@ -35,7 +35,7 @@ class Station:
     lon: float
 
 
-def fetch_stations(api_key: str | None = None) -> Generator[Station, None, None]:
+def fetch_stations(api_key: str | None = None) -> Generator[Station]:
     """Download the current station list from the Digitransit API."""
     api_key = api_key or os.environ.get("DIGITRANSIT_API_KEY")
     headers = {"Content-Type": "application/json"}

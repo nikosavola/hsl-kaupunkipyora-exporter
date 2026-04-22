@@ -80,7 +80,7 @@ def main(argv: list[str] | None = None) -> None:
         format="%(levelname)s: %(message)s",
     )
 
-    # Parse rides 
+    # Parse rides
     input_path = args.file
     if not Path(input_path).is_file():
         logging.error("File not found: %s", input_path)
@@ -92,7 +92,7 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(0)
     logging.info("Found %d ride(s).", len(rides))
 
-    # Fetch station coordinates 
+    # Fetch station coordinates
     if args.use_route and not (args.api_key or os.environ.get("DIGITRANSIT_API_KEY")):
         logging.error(
             "Digitransit API key is required when using --use-route. "
@@ -108,7 +108,7 @@ def main(argv: list[str] | None = None) -> None:
 
     lookup = StationLookup(stations)
 
-    # Generate files 
+    # Generate files
     output_dir = Path(args.output_dir)
     written = 0
     skipped = 0

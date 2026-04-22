@@ -238,7 +238,7 @@ class RideHistoryParser:
             A tuple of (field_name, value) if matched, else None.
         """
         for pattern, name in self._FIELD_PATTERNS:
-            if (m := pattern.match(line.strip())):
+            if m := pattern.match(line.strip()):
                 return name, m.group(1).strip()
         return None
 
