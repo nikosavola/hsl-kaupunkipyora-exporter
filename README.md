@@ -3,6 +3,26 @@
 Parse your [HSL City Bike](https://www.hsl.fi/en/my-information/citybikes/ride-history) ride history and export each
 ride as a Strava-compatible TCX or GPX file.
 
+## How it Works
+
+```mermaid
+graph TD
+    A[HSL Ride History<br/>HTML or Text] --> B(RideHistoryParser)
+    B --> C{StationLookup}
+    C -- Coordinates Found --> D{Path Mode?}
+    C -- Not Found --> E[Skip Ride]
+
+    D -- Default --> F[Summary Only]
+    D -- "--linear" --> G[Linear Path]
+    D -- "--use-route" --> H[fetch_route via Digitransit API]
+
+    F --> I(TCX/GPX Writer)
+    G --> I
+    H --> I
+
+    I --> J[Strava-compatible<br/>TCX or GPX files]
+```
+
 ## Installation
 
 Requires Python 3.13+. The easiest way to run the tool is via [`uvx`](https://docs.astral.sh/uv/):
