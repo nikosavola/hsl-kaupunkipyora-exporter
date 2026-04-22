@@ -1,0 +1,83 @@
+name: Get Python Versions
+permissions:
+  contents: read
+on:
+  workflow_call:
+    outputs:
+      python-versions:
+        description: "JSON array of supported Python versions"
+        value: ${{ jobs.get-python-versions.outputs.python-versions }}
+jobs:
+  get-python-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      python-versions: ${{ steps.get-versions.outputs.python-versions }}
+    steps:
+      # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Get Python versions from pyproject.toml
+        id: get-versions
+        shell: python
+        run: |
+          import re
+          import json
+          import os
+
+          requires_python = None
+          pattern = re.compile(r'requires-python\s*=\s*"([^"]+)"')
+
+          with open("pyproject.toml", "r") as f:
+              for line in f:
+                  match = pattern.search(line)
+                  if match:
+                      requires_python = match.group(1)
+                      break
+
+          if not requires_python:
+              raise ValueError("requires-python field not found in pyproject.toml")
+
+          print(f"requires-python: {requires_python}")
+
+          version_match = re.match(r">=(\d+\.\d+),<(\d+\.\d+)", requires_python)
+          if not version_match:
+              version_match = re.match(r">=(\d+\.\d+)", requires_python)
+              if version_match:
+                  min_version = version_match.group(1)
+                  min_major, min_minor = map(int, min_version.split('.'))
+                  versions = [f"{min_major}.{min_minor}", f"{min_major}.{min_minor + 1}"]
+                  print(f"Supported versions (inferred): {versions}")
+                  versions_json = json.dumps(versions)
+                  github_output = os.getenv("GITHUB_OUTPUT")
+                  if github_output:
+                      with open(github_output, "a") as f:
+                          f.write(f"python-versions={versions_json}\n")
+                  exit(0)
+              raise ValueError(f"Unsupported requires-python format: {requires_python}")
+
+          min_version = version_match.group(1)
+          max_version = version_match.group(2)
+
+          min_major, min_minor = map(int, min_version.split('.'))
+          max_major, max_minor = map(int, max_version.split('.'))
+
+          versions = []
+          current_major, current_minor = min_major, min_minor
+
+          while (current_major < max_major) or (current_major == max_major and current_minor < max_minor):
+              versions.append(f"{current_major}.{current_minor}")
+              current_minor += 1
+              if current_minor >= 20:
+                  current_major += 1
+                  current_minor = 0
+
+          print(f"Supported versions: {versions}")
+
+          versions_json = json.dumps(versions)
+          print(f"python-versions={versions_json}")
+
+          github_output = os.getenv("GITHUB_OUTPUT")
+          if github_output:
+              with open(github_output, "a") as f:
+                  f.write(f"python-versions={versions_json}\n")

@@ -1,0 +1,103 @@
+name: Release
+"on":
+  push:
+    branches:
+      - main
+jobs:
+  check_and_tag:
+    name: Check for version bump and create tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get_version.outputs.tag }}
+      new_tag_created: ${{ steps.check_tag.outputs.new_tag }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=$(grep -m 1 '^version =' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Check if tag exists and create if not
+        id: check_tag
+        run: |
+          TAG=${STEPS_GET_VERSION_OUTPUTS_TAG}
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists. No new release will be created."
+            echo "new_tag=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $TAG does not exist. Creating and pushing tag."
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}"
+            git tag -a "$TAG" -m "Release ${STEPS_GET_VERSION_OUTPUTS_VERSION}"
+            git push origin "$TAG"
+            echo "new_tag=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STEPS_GET_VERSION_OUTPUTS_TAG: ${{ steps.get_version.outputs.tag }}
+          STEPS_GET_VERSION_OUTPUTS_VERSION: ${{ steps.get_version.outputs.version }}
+  build:
+    name: Build package
+    needs: check_and_tag
+    if: needs.check_and_tag.outputs.new_tag_created == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build.yml
+  github_release:
+    name: Create GitHub Release
+    needs: [check_and_tag, build]
+    if: needs.check_and_tag.outputs.new_tag_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Create Release
+        run: |
+          DRAFT_TAG=$(gh release list --limit 1 --json isDraft,tagName \
+            --jq '.[] | select(.isDraft==true) | .tagName' || echo "")
+          if [ -n "$DRAFT_TAG" ]; then
+            DRAFT_BODY=$(gh release view "$DRAFT_TAG" --json body --jq '.body' || echo "")
+            gh release create "${NEEDS_CHECK_AND_TAG_OUTPUTS_TAG}" \
+              --title "${NEEDS_CHECK_AND_TAG_OUTPUTS_TAG}" \
+              --notes "$DRAFT_BODY"
+          else
+            gh release create "${NEEDS_CHECK_AND_TAG_OUTPUTS_TAG}" \
+              --title "${NEEDS_CHECK_AND_TAG_OUTPUTS_TAG}" \
+              --generate-notes
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEEDS_CHECK_AND_TAG_OUTPUTS_TAG: ${{ needs.check_and_tag.outputs.tag }}
+  pypi_publish:
+    name: Publish to PyPI
+    needs: [check_and_tag, build]
+    if: needs.check_and_tag.outputs.new_tag_created == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/hsl-kaupunkipyora-exporter
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution packages
+        # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: dist
+          path: dist
+      - name: Publish package to PyPI
+        # v1.14.0
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
