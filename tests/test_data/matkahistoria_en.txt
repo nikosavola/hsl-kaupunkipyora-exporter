@@ -1,0 +1,135 @@
+
+Venttiilikuja
+21.4.2024 20:06
+2,9 km
+9 min
+Kansallismuseo
+21.4.2024 20:15
+Helsinki and Espoo
+Fault report ›
+Departure station: Venttiilikuja
+
+Departure time: 21.4.2024 20:06
+
+Return station: Kansallismuseo
+
+city-bikes/return-date: 21.4.2024 20:15
+
+Journey length and duration: 2,9 km, 9 min
+
+Area: Helsinki and Espoo
+
+Fault report
+Cygnaeuksenkatu
+21.4.2024 16:46
+2,9 km
+11 min
+Ratapihantie
+21.4.2024 16:58
+Helsinki and Espoo
+Fault report ›
+Departure station: Cygnaeuksenkatu
+
+Departure time: 21.4.2024 16:46
+
+Return station: Ratapihantie
+
+city-bikes/return-date: 21.4.2024 16:58
+
+Journey length and duration: 2,9 km, 11 min
+
+Area: Helsinki and Espoo
+
+Fault report
+Kaapelitehdas
+18.4.2024 13:13
+2,4 km
+12 min
+Sammonpuistikko
+18.4.2024 13:26
+Helsinki and Espoo
+Fault report ›
+Departure station: Kaapelitehdas
+
+Departure time: 18.4.2024 13:13
+
+Return station: Sammonpuistikko
+
+city-bikes/return-date: 18.4.2024 13:26
+
+Journey length and duration: 2,4 km, 12 min
+
+Area: Helsinki and Espoo
+
+Fault report
+Cygnaeuksenkatu
+18.4.2024 09:52
+2,8 km
+17 min
+Kaapelitehdas
+18.4.2024 10:10
+Helsinki and Espoo
+Fault report ›
+Departure station: Cygnaeuksenkatu
+
+Departure time: 18.4.2024 09:52
+
+Return station: Kaapelitehdas
+
+city-bikes/return-date: 18.4.2024 10:10
+
+Journey length and duration: 2,8 km, 17 min
+
+Area: Helsinki and Espoo
+
+Fault report
+Hakaniemi (M)
+10.4.2024 23:32
+2,1 km
+14 min
+Cygnaeuksenkatu
+10.4.2024 23:47
+Helsinki and Espoo
+Fault report ›
+Departure station: Hakaniemi (M)
+
+Departure time: 10.4.2024 23:32
+
+Return station: Cygnaeuksenkatu
+
+city-bikes/return-date: 10.4.2024 23:47
+
+Journey length and duration: 2,1 km, 14 min
+
+Area: Helsinki and Espoo
+
+Fault report
+Diakoniapuisto
+10.4.2024 22:29
+0,9 km
+7 min
+Ympyrätalo
+10.4.2024 22:36
+Helsinki and Espoo
+Fault report ›
+Departure station: Diakoniapuisto
+
+Departure time: 10.4.2024 22:29
+
+Return station: Ympyrätalo
+
+city-bikes/return-date: 10.4.2024 22:36
+
+Journey length and duration: 0,9 km, 7 min
+
+Area: Helsinki and Espoo
+
+Fault report
+Apollonkatu
+10.4.2024 19:18
+2,1 km
+13 min
+Diakoniapuisto
+10.4.2024 19:32
+Helsinki and Espoo
+Fault report ›
