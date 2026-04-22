@@ -1,0 +1,16 @@
+query ($fromLat: Float!, $fromLon: Float!, $toLat: Float!, $toLon: Float!) {
+  plan(
+    from: { lat: $fromLat, lon: $fromLon }
+    to: { lat: $toLat, lon: $toLon }
+    numItineraries: 1
+    transportModes: [{ mode: BICYCLE }]
+  ) {
+    itineraries {
+      legs {
+        legGeometry {
+          points
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  vehicleRentalStations {
+    name
+    lat
+    lon
+  }
+}
