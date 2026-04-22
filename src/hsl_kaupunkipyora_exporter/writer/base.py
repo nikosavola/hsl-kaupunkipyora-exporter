@@ -15,12 +15,32 @@ if TYPE_CHECKING:
 class BaseRideWriter(ABC):
     """Abstract base class for ride writers (GPX, TCX, etc.)."""
 
-    def __init__(self, output_dir: Path):
-        """Initialize the ride writer with an output directory."""
-        self.output_dir: Path = output_dir
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+    #: File extension used by the writer, without the leading dot.
+    EXTENSION: str = ""
+
+    def __init__(self, output_dir: Path | None = None) -> None:
+        """Initialize the ride writer.
+
+        Args:
+            output_dir: Directory to write files into. When ``None`` the writer
+                can still build in-memory XML via :meth:`build`, but :meth:`write`
+                will raise.
+        """
+        self.output_dir: Path | None = output_dir
+        if output_dir is not None:
+            output_dir.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
+    def build(
+        self,
+        ride: Ride,
+        departure_coords: Station,
+        return_coords: Station,
+        route_points: list[Point] | None = None,
+        include_points: bool = True,
+    ) -> str:
+        """Build an in-memory XML string for a single ride."""
+
     def write(
         self,
         ride: Ride,
@@ -30,7 +50,18 @@ class BaseRideWriter(ABC):
         include_points: bool = True,
     ) -> Path:
         """Export a single ride to a file and return the path."""
-        pass
+        if self.output_dir is None:
+            msg = (
+                f"{type(self).__name__} was initialised without an output_dir; "
+                "use build() for in-memory XML or pass output_dir to write to disk."
+            )
+            raise ValueError(msg)
+        xml = self.build(
+            ride, departure_coords, return_coords, route_points, include_points
+        )
+        path = self.output_dir / self._safe_filename(ride, self.EXTENSION)
+        path.write_text(xml, encoding="utf-8")
+        return path
 
     @staticmethod
     def _safe_filename(ride: Ride, extension: str) -> str:
@@ -39,3 +70,7 @@ class BaseRideWriter(ABC):
         dep = ride.departure_station.replace("/", "-").replace(" ", "_")
         ret = ride.return_station.replace("/", "-").replace(" ", "_")
         return f"{ts}_{dep}_to_{ret}.{extension}"
+
+    def filename_for(self, ride: Ride) -> str:
+        """Return the filename this writer would use for the given ride."""
+        return self._safe_filename(ride, self.EXTENSION)

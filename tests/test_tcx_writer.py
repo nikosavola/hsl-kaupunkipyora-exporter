@@ -67,3 +67,22 @@ def test_tcx_summary_only(tcx_writer: TCXWriter) -> None:
     dist = root.find(".//tcx:DistanceMeters", ns)
     assert dist is not None
     assert dist.text == EXPECTED_DISTANCE_M
+
+
+def test_build_returns_str_without_output_dir() -> None:
+    """The public build() method works without a filesystem destination."""
+    writer = TCXWriter()
+    xml = writer.build(_sample_ride(), DEP, RET)
+    assert isinstance(xml, str)
+    assert "TrainingCenterDatabase" in xml
+
+
+def test_write_without_output_dir_raises() -> None:
+    writer = TCXWriter()
+    with pytest.raises(ValueError, match="output_dir"):
+        writer.write(_sample_ride(), DEP, RET)
+
+
+def test_filename_for_uses_extension() -> None:
+    name = TCXWriter().filename_for(_sample_ride())
+    assert name.endswith(".tcx")
