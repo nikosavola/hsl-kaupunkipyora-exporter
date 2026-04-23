@@ -10,6 +10,7 @@ const STATION_QUERY = JSON.stringify({
   query: "{ vehicleRentalStations { name lat lon } }",
 });
 const MANIFEST_URL = "./dist/manifest.json";
+const STATIONS_FALLBACK_URL = "./dist/stations.json";
 const MAIN_PY_URL = "./main.py";
 
 // ---------------------------------------------------------------------------
@@ -101,6 +102,14 @@ async function loadManifest() {
   return resp.json();
 }
 
+async function loadFallbackStations() {
+  const resp = await fetch(STATIONS_FALLBACK_URL);
+  if (!resp.ok) {
+    throw new Error(`Fallback station data not available (HTTP ${resp.status})`);
+  }
+  return resp.json();
+}
+
 async function initPyodide() {
   try {
     log("Loading Pyodide runtime …");
@@ -109,14 +118,14 @@ async function initPyodide() {
 
     log("Resolving application wheel …");
     const manifest = await loadManifest();
-    const wheelUrl = `./dist/${manifest.wheel}`;
+    const wheelUrl = new URL(`./dist/${manifest.wheel}`, window.location.href).href;
 
     log("Installing Python packages …");
     await pyodide.loadPackage("micropip");
     const micropip = pyodide.pyimport("micropip");
-    // beautifulsoup4 and gpxpy are resolved by micropip from PyPI (pure-Python).
+    // beautifulsoup4, gpxpy, polyline are resolved by micropip from PyPI.
     // The app wheel is served locally.
-    await micropip.install([wheelUrl]);
+    await micropip.install(["polyline", "pyodide-http", wheelUrl]);
 
     log("Loading application entry point …");
     const mainPy = await fetchText(MAIN_PY_URL, "main.py");
@@ -168,8 +177,15 @@ async function runExport() {
   }
 
   const fmt = formatSelect.value;
-  const includePoints = pathSelect.value === "linear";
+  const pathMode = pathSelect.value;
+  const includePoints = pathMode !== "summary";
+  const useRoute = pathMode === "routed";
   const apiKey = apiKeyInput.value.trim();
+
+  if (useRoute && !apiKey) {
+    log("An API key is required for Routed path mode.", "error");
+    return;
+  }
 
   exportBtn.disabled = true;
   exportBtnText.innerHTML = '<span class="spinner"></span> Processing…';
@@ -184,15 +200,32 @@ async function runExport() {
       log(`Loaded ${stations.length} stations.`);
     } catch (err) {
       log(
-        `Could not fetch stations: ${err.message} — rides will be skipped if coordinates are unknown.`,
+        `Could not fetch live stations: ${err.message} — trying fallback dataset …`,
         "warn",
       );
+      try {
+        const stations = await loadFallbackStations();
+        stationsJson = JSON.stringify(stations);
+        log(`Loaded ${stations.length} stations from fallback dataset.`);
+      } catch (fallbackErr) {
+        log(
+          `Could not load fallback stations: ${fallbackErr.message} — rides will be skipped if coordinates are unknown.`,
+          "warn",
+        );
+      }
     }
 
     const processRides = pyodide.globals.get("process_rides");
     let resultProxy;
     try {
-      resultProxy = processRides(content, stationsJson, fmt, includePoints);
+      resultProxy = processRides(
+        content,
+        stationsJson,
+        fmt,
+        includePoints,
+        useRoute,
+        apiKey || undefined,
+      );
     } finally {
       processRides.destroy();
     }

@@ -54,7 +54,8 @@ build-web:
     @cp dist/*.whl web/dist/
     @wheel_name=$(basename dist/*.whl); \
         printf '{\n  "wheel": "%s"\n}\n' "$wheel_name" > web/dist/manifest.json
-    @echo "Wheel staged to web/dist/ (see web/dist/manifest.json)."
+    @uv run python3 -c 'import json; from hsl_kaupunkipyora_exporter.stations import get_stations; stations = get_stations(); data = [{"name": s.name, "lat": s.lat, "lon": s.lon} for s in stations]; print(json.dumps(data, ensure_ascii=False, indent=2))' > web/dist/stations.json
+    @echo "Wheel and station data staged to web/dist/."
 
 # Serve the web app locally (builds first). Requires Python 3.
 [group('build')]

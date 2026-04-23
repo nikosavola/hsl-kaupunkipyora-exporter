@@ -12,6 +12,7 @@ import json
 from typing import TYPE_CHECKING
 
 from hsl_kaupunkipyora_exporter.parser import RideHistoryParser
+from hsl_kaupunkipyora_exporter.routing import fetch_route
 from hsl_kaupunkipyora_exporter.stations import Station, StationLookup
 from hsl_kaupunkipyora_exporter.writer import GPXWriter, TCXWriter
 
@@ -19,6 +20,14 @@ try:
     import js  # type: ignore[import-not-found]
 except ImportError:  # pragma: no cover - only importable under Pyodide
     js = None
+
+try:
+    import pyodide_http
+
+    pyodide_http.patch_all()
+except ImportError:
+    pass
+
 
 if TYPE_CHECKING:
     from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
@@ -40,11 +49,13 @@ def _writer_for(fmt: str) -> BaseRideWriter:
     raise ValueError(msg)
 
 
-def process_rides(
+def process_rides(  # noqa: PLR0913, PLR0917
     content: str,
     stations_json: str,
     fmt: str,
     include_points: bool,
+    use_route: bool = False,
+    api_key: str | None = None,
 ) -> list[tuple[str, str]]:
     """Parse ride content and return a list of ``(filename, xml)`` tuples.
 
@@ -55,6 +66,8 @@ def process_rides(
         fmt: Export format — ``"tcx"`` or ``"gpx"``.
         include_points: Whether to include a straight-line path between the
             departure and return stations.
+        use_route: Whether to fetch a suggested cycling route from Digitransit.
+        api_key: Optional Digitransit API key for route fetching.
 
     Returns:
         A list of ``(filename, xml_content)`` tuples, one per exported ride.
@@ -94,7 +107,31 @@ def process_rides(
             skipped += 1
             continue
 
-        xml = writer.build(ride, dep, ret, include_points=include_points)
+        route_points = None
+        if use_route:
+            _log(
+                f"Fetching route for {ride.departure_station} → {ride.return_station} …"
+            )
+            try:
+                route_points = fetch_route(
+                    dep.lat, dep.lon, ret.lat, ret.lon, api_key=api_key
+                )
+            except Exception as e:
+                _log(f"Routing logic failed with error: {e}", "error")
+
+            if not route_points:
+                _log(
+                    f"Could not fetch route for '{ride}' – falling back to straight line.",
+                    "warn",
+                )
+
+        xml = writer.build(
+            ride,
+            dep,
+            ret,
+            route_points=route_points,
+            include_points=include_points,
+        )
         fname = writer.filename_for(ride)
         results.append((fname, xml))
         _log(f"Generated {fname}")
