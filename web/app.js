@@ -174,7 +174,14 @@ const i18n = {
   },
 };
 
+const browserLang = (
+  navigator.language ||
+  navigator.userLanguage ||
+  "en"
+).toLowerCase();
 let currentLang = "en";
+if (browserLang.startsWith("fi")) currentLang = "fi";
+else if (browserLang.startsWith("sv")) currentLang = "sv";
 
 function t(key, params = {}) {
   let text = i18n[currentLang][key] || i18n["en"][key] || key;
@@ -527,6 +534,18 @@ function downloadAllFiles(files) {
 // ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
-// Initialize language based on default
+// Initialize language based on default or browser settings
+const activeBtn = document.querySelector(
+  `.lang-btn[data-lang="${currentLang}"]`,
+);
+if (activeBtn) {
+  document.querySelectorAll(".lang-btn").forEach((b) => {
+    b.classList.remove("active");
+    b.setAttribute("aria-pressed", "false");
+  });
+  activeBtn.classList.add("active");
+  activeBtn.setAttribute("aria-pressed", "true");
+}
+
 updateTranslations();
 initPyodide();
