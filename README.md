@@ -83,6 +83,7 @@ The exporter supports three distinct modes for handling geographic data:
 | `--use-route`        | Use suggested HSL cycling route instead of a straight line         |
 | `--api-key KEY`      | Digitransit API key (alternative to `DIGITRANSIT_API_KEY` env var) |
 | `--refresh-stations` | Force re-download of the bike station coordinate list              |
+| `-n`, `--dry-run`    | Preview which files would be written or skipped without writing    |
 | `-v`, `--verbose`    | Enable verbose/debug logging                                       |
 
 ### TCX vs GPX

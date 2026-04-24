@@ -1,5 +1,6 @@
 """Tests for the CLI entry point."""
 
+import logging
 from pathlib import Path
 from unittest.mock import patch
 
@@ -96,3 +97,76 @@ def test_cli_api_key_passed(tmp_path: Path) -> None:
         main([str(input_file), "--api-key", "test-key"])
         mock_get.assert_called_once()
         assert mock_get.call_args[1]["api_key"] == "test-key"
+
+
+def test_cli_dry_run_no_files_written(tmp_path: Path) -> None:
+    input_file = tmp_path / "rides.txt"
+    input_file.write_text(SAMPLE_TEXT, encoding="utf-8")
+    out_dir = tmp_path / "output_dry"
+
+    with patch(
+        "hsl_kaupunkipyora_exporter.cli.get_stations", return_value=MOCK_STATIONS
+    ):
+        main([str(input_file), "-o", str(out_dir), "--dry-run"])
+
+    # Dry-run must have zero filesystem side effects: no files, and no
+    # output directory created either.
+    assert not out_dir.exists()
+
+
+def test_cli_dry_run_short_flag(tmp_path: Path) -> None:
+    input_file = tmp_path / "rides.txt"
+    input_file.write_text(SAMPLE_TEXT, encoding="utf-8")
+    out_dir = tmp_path / "output_dry_n"
+
+    with patch(
+        "hsl_kaupunkipyora_exporter.cli.get_stations", return_value=MOCK_STATIONS
+    ):
+        main([str(input_file), "-o", str(out_dir), "-n"])
+
+    assert not out_dir.exists()
+
+
+def test_cli_dry_run_logs_would_write(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    input_file = tmp_path / "rides.txt"
+    input_file.write_text(SAMPLE_TEXT, encoding="utf-8")
+    out_dir = tmp_path / "output_dry_log"
+
+    with (
+        patch(
+            "hsl_kaupunkipyora_exporter.cli.get_stations", return_value=MOCK_STATIONS
+        ),
+        caplog.at_level(logging.INFO),
+    ):
+        main([str(input_file), "-o", str(out_dir), "--dry-run"])
+
+    assert any("[WOULD WRITE]" in msg for msg in caplog.messages)
+    assert any("Dry run" in msg for msg in caplog.messages)
+
+
+def test_cli_dry_run_logs_skip_unknown_station(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    text = """\
+Departure station: Kaivopuisto
+Departure time: 01.06.2024 14:30
+Return station: UnknownPlace
+Return time: 01.06.2024 14:45
+"""
+    input_file = tmp_path / "rides.txt"
+    input_file.write_text(text, encoding="utf-8")
+    out_dir = tmp_path / "output_dry_skip"
+
+    with (
+        patch(
+            "hsl_kaupunkipyora_exporter.cli.get_stations", return_value=MOCK_STATIONS
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        main([str(input_file), "-o", str(out_dir), "--dry-run"])
+
+    assert any(
+        "[SKIP]" in msg and "unknown return station" in msg for msg in caplog.messages
+    )

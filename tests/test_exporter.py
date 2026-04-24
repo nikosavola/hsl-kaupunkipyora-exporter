@@ -121,6 +121,33 @@ def test_export_rides_no_disk_writes_without_output_dir() -> None:
     assert len(result.files) == 1
 
 
+def test_export_rides_dry_run_creates_no_output_dir(tmp_path: Path) -> None:
+    """dry_run=True must have zero filesystem side effects.
+
+    Even when the writer was given a real output_dir.
+    """
+    missing_dir = tmp_path / "does-not-exist-yet"
+    writer = TCXWriter(missing_dir)
+    result = export_rides([RIDE], LOOKUP, writer, dry_run=True)
+
+    assert result.written == 1
+    assert not missing_dir.exists()
+
+
+def test_export_rides_dry_run_survives_unwritable_output_dir() -> None:
+    """A dry run must not touch the output_dir.
+
+    So it can't fail just because that path isn't writable (or doesn't
+    exist and can't be created).
+    """
+    unwritable = Path("/nonexistent-root/should-never-be-created")
+    writer = TCXWriter(unwritable)
+    result = export_rides([RIDE], LOOKUP, writer, dry_run=True)
+
+    assert result.written == 1
+    assert not unwritable.exists()
+
+
 def test_export_rides_path_mode_summary() -> None:
     writer = TCXWriter()
     result = export_rides([RIDE], LOOKUP, writer, path_mode="summary")

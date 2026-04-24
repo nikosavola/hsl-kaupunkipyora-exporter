@@ -27,8 +27,6 @@ class BaseRideWriter(ABC):
                 will raise.
         """
         self.output_dir: Path | None = output_dir
-        if output_dir is not None:
-            output_dir.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
     def build(
@@ -59,6 +57,7 @@ class BaseRideWriter(ABC):
         xml = self.build(
             ride, departure_coords, return_coords, route_points, include_points
         )
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         path = self.output_dir / self._safe_filename(ride, self.EXTENSION)
         path.write_text(xml, encoding="utf-8")
         return path
