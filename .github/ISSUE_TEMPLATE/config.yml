@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/nikosavola/hsl-kaupunkipyora-exporter/discussions
+    about: Ask questions or share ideas in Discussions instead of opening a blank issue.
+  - name: Security Vulnerability
+    url: https://github.com/nikosavola/hsl-kaupunkipyora-exporter/security/advisories/new
+    about: >
+      Please do not report security vulnerabilities through public issues.
+      Use GitHub Private Vulnerability Reporting instead.

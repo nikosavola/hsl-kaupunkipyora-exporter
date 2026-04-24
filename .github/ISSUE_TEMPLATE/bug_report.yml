@@ -1,0 +1,76 @@
+name: Bug Report
+description: Report a problem with the exporter
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please fill in as much detail as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the problem is.
+      placeholder: "When I run … I expect … but instead …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: CLI command / web action used to reproduce
+      description: >
+        Paste the exact CLI command you ran, or describe the steps you took in the web app.
+        Wrap shell commands in backticks.
+      placeholder: |
+        ```
+        uvx hsl-kaupunkipyora-exporter --input rides.json
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample_input
+    attributes:
+      label: Sample input
+      description: >
+        Paste a minimal excerpt from your input file that reproduces the problem.
+        **Strip any personally identifying station names or data before posting.**
+      placeholder: |
+        ```json
+        { "rides": [ … ] }
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Actual output / error log
+      description: Paste the full output or error traceback you received.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version (CLI) or browser + OS (web app)
+      description: >
+        For CLI: run `python --version` or `uvx hsl-kaupunkipyora-exporter --version`.
+        For web app: state your browser and operating system (e.g. "Firefox 125 on macOS 14").
+      placeholder: "Python 3.12.3  /  Firefox 125 on macOS 14"
+    validations:
+      required: true
+
+  - type: input
+    id: package_version
+    attributes:
+      label: Package version
+      description: >
+        Run `uvx hsl-kaupunkipyora-exporter --version` and paste the output.
+        You can also find the version on [PyPI](https://pypi.org/project/hsl-kaupunkipyora-exporter/).
+      placeholder: "1.2.3"
+    validations:
+      required: true
