@@ -438,6 +438,14 @@ footer a:hover,
   min-inline-size: 0;
 }
 
+@media (width <= 600px) {
+  .lang-switcher {
+    position: static;
+    width: fit-content;
+    margin: 16px auto 0;
+  }
+}
+
 .lang-btn {
   display: inline-flex;
   gap: 8px;
