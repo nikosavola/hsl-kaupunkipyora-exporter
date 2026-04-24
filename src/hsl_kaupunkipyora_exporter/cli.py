@@ -8,8 +8,8 @@ import os
 import sys
 from pathlib import Path
 
+from hsl_kaupunkipyora_exporter.exporter import ExportEvent, export_rides
 from hsl_kaupunkipyora_exporter.parser import RideHistoryParser
-from hsl_kaupunkipyora_exporter.routing import fetch_route
 from hsl_kaupunkipyora_exporter.stations import StationLookup, get_stations
 from hsl_kaupunkipyora_exporter.writer import GPXWriter, TCXWriter
 
@@ -71,6 +71,19 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+_LOG_LEVELS = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+}
+
+
+def _log_event(event: ExportEvent) -> None:
+    """Forward an :class:`ExportEvent` to the :mod:`logging` system."""
+    logging.log(_LOG_LEVELS.get(event.level, logging.INFO), "%s", event.message)
+
+
 def main(argv: list[str] | None = None) -> None:
     """Entry point invoked by the console script."""
     args = _build_parser().parse_args(argv)
@@ -107,62 +120,23 @@ def main(argv: list[str] | None = None) -> None:
 
     lookup = StationLookup(stations)
 
-    # Generate files
-    output_dir = Path(args.output_dir)
-    written = 0
-    skipped = 0
+    # Determine path mode from CLI flags
+    if args.use_route:
+        path_mode = "routed"
+    elif args.linear:
+        path_mode = "linear"
+    else:
+        path_mode = "summary"
 
     # Initialize writer based on format
+    output_dir = Path(args.output_dir)
     writer = TCXWriter(output_dir) if args.format == "tcx" else GPXWriter(output_dir)
 
-    for ride in rides:
-        dep = lookup.find(ride.departure_station)
-        ret = lookup.find(ride.return_station)
-
-        if dep is None:
-            logging.warning(
-                "Could not find coordinates for '%s' – skipping ride.",
-                ride.departure_station,
-            )
-            skipped += 1
-            continue
-        if ret is None:
-            logging.warning(
-                "Could not find coordinates for '%s' – skipping ride.",
-                ride.return_station,
-            )
-            skipped += 1
-            continue
-
-        route_points = None
-        if args.use_route:
-            logging.debug(
-                "Fetching route for %s → %s",
-                ride.departure_station,
-                ride.return_station,
-            )
-            route_points = fetch_route(
-                dep.lat, dep.lon, ret.lat, ret.lon, api_key=args.api_key
-            )
-            if not route_points:
-                logging.warning(
-                    "Could not fetch route for '%s' – falling back to straight line.",
-                    ride,
-                )
-
-        path = writer.write(
-            ride,
-            dep,
-            ret,
-            route_points=route_points,
-            include_points=(args.linear or args.use_route),
-        )
-        logging.info("Wrote %s", path)
-        written += 1
-
-    logging.info(
-        "Done – %d %s file(s) written, %d skipped.",
-        written,
-        args.format.upper(),
-        skipped,
+    export_rides(
+        rides,
+        lookup,
+        writer,
+        path_mode=path_mode,
+        api_key=args.api_key,
+        on_event=_log_event,
     )
