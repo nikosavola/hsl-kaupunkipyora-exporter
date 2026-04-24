@@ -137,6 +137,7 @@ def export_rides(  # noqa: PLR0913
             on_event(ExportEvent(message=message, level=level))
 
     result = ExportResult()
+    seen_filenames: dict[str, int] = {}
 
     for ride in rides:
         resolved = _resolve_ride_stations(ride, lookup, _emit)
@@ -153,6 +154,12 @@ def export_rides(  # noqa: PLR0913
             ride, dep, ret, route_points=route_points, include_points=include_points
         )
         filename = writer.filename_for(ride)
+        if filename in seen_filenames:
+            seen_filenames[filename] += 1
+            stem, _, ext = filename.rpartition(".")
+            filename = f"{stem}_{seen_filenames[filename]}.{ext}"
+        else:
+            seen_filenames[filename] = 1
 
         if collect_ride_data:
             result.ride_data.append((ride, dep, ret, route_points, include_points))

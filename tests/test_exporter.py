@@ -224,3 +224,21 @@ def test_export_rides_multiple_rides() -> None:
     assert result.written == 2  # noqa: PLR2004
     assert result.skipped == 0
     assert len(result.files) == 2  # noqa: PLR2004
+
+
+def test_export_rides_deduplicates_identical_filenames() -> None:
+    """Two rides that map to the same filename must not collide."""
+    duplicate_ride = Ride(
+        departure_station="Kaivopuisto",
+        departure_time=datetime(2024, 6, 1, 14, 30),
+        return_station="Hakaniemi",
+        return_time=datetime(2024, 6, 1, 14, 45),
+        distance_km=3.0,
+    )
+    result = export_rides([RIDE, duplicate_ride], LOOKUP, TCXWriter())
+
+    assert result.written == 2  # noqa: PLR2004
+    filenames = [f for f, _ in result.files]
+    assert len(filenames) == len(set(filenames)), "filenames collided"
+    contents = [xml for _, xml in result.files]
+    assert contents[0] != contents[1], "second ride's data was lost"

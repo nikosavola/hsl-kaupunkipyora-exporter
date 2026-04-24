@@ -10,7 +10,7 @@ import zipfile
 from pathlib import Path
 
 from hsl_kaupunkipyora_exporter import __version__
-from hsl_kaupunkipyora_exporter.exporter import ExportEvent, export_rides
+from hsl_kaupunkipyora_exporter.exporter import ExportEvent, ExportResult, export_rides
 from hsl_kaupunkipyora_exporter.parser import RideHistoryParser
 from hsl_kaupunkipyora_exporter.stations import StationLookup, get_stations
 from hsl_kaupunkipyora_exporter.writer import GPXWriter, TCXWriter
@@ -107,6 +107,19 @@ def _log_event(event: ExportEvent) -> None:
     logging.log(_LOG_LEVELS.get(event.level, logging.INFO), "%s", event.message)
 
 
+def _log_dry_run_aggregates(args: argparse.Namespace, result: ExportResult) -> None:
+    """Preview the --merge/--zip aggregate artifacts without writing them.
+
+    export_rides() already logs [WOULD WRITE] per ride; this covers the
+    additional combined files --merge/--zip would otherwise produce.
+    """
+    would_have_output = bool(result.ride_data) if args.merge else bool(result.files)
+    if args.merge and would_have_output:
+        logging.info("[WOULD WRITE] merged_rides.%s", args.format)
+    if args.zip and would_have_output:
+        logging.info("[WOULD WRITE] rides.zip")
+
+
 def main(argv: list[str] | None = None) -> None:
     """Entry point invoked by the console script."""
     args = _build_parser().parse_args(argv)
@@ -150,9 +163,12 @@ def main(argv: list[str] | None = None) -> None:
     else:
         path_mode = "summary"
 
-    # Initialize writer based on format
+    # Initialize writer based on format. When merging, individual per-ride
+    # files are not written to disk — only the merged file is — so the
+    # writer is left without an output_dir.
     output_dir = Path(args.output_dir)
-    writer = TCXWriter(output_dir) if args.format == "tcx" else GPXWriter(output_dir)
+    writer_dir = None if args.merge else output_dir
+    writer = TCXWriter(writer_dir) if args.format == "tcx" else GPXWriter(writer_dir)
 
     result = export_rides(
         rides,
@@ -164,11 +180,19 @@ def main(argv: list[str] | None = None) -> None:
         on_event=_log_event,
         collect_ride_data=args.merge,
     )
-    written_paths = [output_dir / filename for filename, _ in result.files]
+
+    if args.dry_run:
+        _log_dry_run_aggregates(args, result)
+        return
+
+    written_paths = (
+        [] if args.merge else [output_dir / filename for filename, _ in result.files]
+    )
 
     # Handle --merge: write a single merged file
     if args.merge and result.ride_data:
         merged_xml = writer.build_merged(result.ride_data)
+        output_dir.mkdir(parents=True, exist_ok=True)
         merged_path = output_dir / f"merged_rides.{args.format}"
         merged_path.write_text(merged_xml, encoding="utf-8")
         written_paths.append(merged_path)

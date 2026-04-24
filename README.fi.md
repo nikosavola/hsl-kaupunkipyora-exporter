@@ -61,18 +61,18 @@ HSL Kaupunkipyörä Exporter tukee kolmea eri tapaa reitittää paikkatiedot:
 
 ### Valinnat
 
-| Lippu                | Kuvaus                                                                         |
-| -------------------- | ------------------------------------------------------------------------------ |
-| `--output-dir DIR`   | Hakemisto, johon tiedostot kirjoitetaan (oletus: `./tcx_output`)               |
-| `--format FMT`       | Tiedostomuoto: `tcx` (oletus) tai `gpx`.                                       |
-| `--linear`           | Käytä suoraa viivaa asemien välillä                                            |
-| `--use-route`        | Käytä HSL:n ehdottamaa pyöräilyreittiä suoran viivan sijaan                    |
-| `--api-key KEY`      | Digitransit API -avain (vaihtoehto `DIGITRANSIT_API_KEY`-ympäristömuuttujalle) |
-| `--refresh-stations` | Pakota pyöräasemien koordinaattilistan uudelleenlataus                         |
-| `-n`, `--dry-run`    | Esikatsele mitkä tiedostot kirjoitettaisiin tai ohitettaisiin                  |
-| `--zip`              | Pakkaa kaikki tiedostot yhdeksi `rides.zip`-arkistoksi                         |
+| Lippu                | Kuvaus                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `--output-dir DIR`   | Hakemisto, johon tiedostot kirjoitetaan (oletus: `./tcx_output`)                            |
+| `--format FMT`       | Tiedostomuoto: `tcx` (oletus) tai `gpx`.                                                    |
+| `--linear`           | Käytä suoraa viivaa asemien välillä                                                         |
+| `--use-route`        | Käytä HSL:n ehdottamaa pyöräilyreittiä suoran viivan sijaan                                 |
+| `--api-key KEY`      | Digitransit API -avain (vaihtoehto `DIGITRANSIT_API_KEY`-ympäristömuuttujalle)              |
+| `--refresh-stations` | Pakota pyöräasemien koordinaattilistan uudelleenlataus                                      |
+| `-n`, `--dry-run`    | Esikatsele mitkä tiedostot kirjoitettaisiin tai ohitettaisiin                               |
+| `--zip`              | Pakkaa kaikki tiedostot yhdeksi `rides.zip`-arkistoksi                                      |
 | `--merge`            | Kirjoita yksi tiedosto kaikilla ajoilla (GPX: useita reittejä / TCX: useita aktiviteetteja) |
-| `-v`, `--verbose`    | Ota käyttöön laajennettu/debug-lokitus                                         |
+| `-v`, `--verbose`    | Ota käyttöön laajennettu/debug-lokitus                                                      |
 
 ### TCX vs GPX
 

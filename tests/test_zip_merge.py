@@ -15,6 +15,7 @@ from hsl_kaupunkipyora_exporter.cli import main
 from hsl_kaupunkipyora_exporter.parser import Ride
 from hsl_kaupunkipyora_exporter.stations import Station
 from hsl_kaupunkipyora_exporter.writer import GPXWriter, TCXWriter
+from hsl_kaupunkipyora_exporter.writer.base import _RideData
 
 # Two rides so we can test multi-ride merge / zip
 MULTI_RIDE_TEXT = """\
@@ -154,13 +155,55 @@ def test_cli_merge_and_zip(tmp_path: Path) -> None:
         assert zf.namelist()[0] == "merged_rides.tcx"
 
 
+def test_cli_merge_dry_run_writes_nothing(tmp_path: Path) -> None:
+    """--merge --dry-run must not write the merged file to disk."""
+    input_file = tmp_path / "rides.txt"
+    input_file.write_text(MULTI_RIDE_TEXT, encoding="utf-8")
+    out_dir = tmp_path / "out_merge_dry"
+
+    with patch(
+        "hsl_kaupunkipyora_exporter.cli.get_stations", return_value=MOCK_STATIONS
+    ):
+        main([str(input_file), "-o", str(out_dir), "--merge", "--dry-run"])
+
+    assert not out_dir.exists()
+
+
+def test_cli_zip_dry_run_writes_nothing(tmp_path: Path) -> None:
+    """--zip --dry-run must not write the archive (or crash trying to)."""
+    input_file = tmp_path / "rides.txt"
+    input_file.write_text(MULTI_RIDE_TEXT, encoding="utf-8")
+    out_dir = tmp_path / "out_zip_dry"
+
+    with patch(
+        "hsl_kaupunkipyora_exporter.cli.get_stations", return_value=MOCK_STATIONS
+    ):
+        main([str(input_file), "-o", str(out_dir), "--zip", "--dry-run"])
+
+    assert not out_dir.exists()
+
+
+def test_cli_merge_and_zip_dry_run_writes_nothing(tmp_path: Path) -> None:
+    """--merge --zip --dry-run must not write anything either."""
+    input_file = tmp_path / "rides.txt"
+    input_file.write_text(MULTI_RIDE_TEXT, encoding="utf-8")
+    out_dir = tmp_path / "out_merge_zip_dry"
+
+    with patch(
+        "hsl_kaupunkipyora_exporter.cli.get_stations", return_value=MOCK_STATIONS
+    ):
+        main([str(input_file), "-o", str(out_dir), "--merge", "--zip", "--dry-run"])
+
+    assert not out_dir.exists()
+
+
 # ── Writer build_merged ───────────────────────────────────────────────
 
 
 def test_gpx_build_merged_multiple_tracks() -> None:
     writer = GPXWriter()
     rides = _sample_rides()
-    data = [
+    data: list[_RideData] = [
         (rides[0], DEP, RET, None, False),
         (rides[1], RET, DEP, None, False),
     ]
@@ -174,7 +217,7 @@ def test_gpx_build_merged_multiple_tracks() -> None:
 def test_tcx_build_merged_multiple_activities() -> None:
     writer = TCXWriter()
     rides = _sample_rides()
-    data = [
+    data: list[_RideData] = [
         (rides[0], DEP, RET, None, True),
         (rides[1], RET, DEP, None, True),
     ]

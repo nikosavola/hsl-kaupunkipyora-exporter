@@ -226,6 +226,9 @@ function updateTranslations() {
   document.querySelectorAll(".btn-download-all").forEach((el) => {
     el.textContent = t("btn-download-all");
   });
+  document.querySelectorAll(".btn-download-zip").forEach((el) => {
+    el.textContent = t("btn-download-zip");
+  });
   document.querySelectorAll(".result-item a").forEach((el) => {
     el.textContent = t("btn-download");
   });
@@ -520,12 +523,16 @@ async function runExport() {
     }
 
     if (files.length > 1) {
+      const downloadAllBtn = document.createElement("button");
+      downloadAllBtn.className = "btn btn-download-all";
+      downloadAllBtn.textContent = t("btn-download-all");
+      downloadAllBtn.addEventListener("click", () => downloadAllFiles(files));
+      resultsDiv.appendChild(downloadAllBtn);
+
       const zipBtn = document.createElement("button");
-      zipBtn.className = "btn btn-download-all";
+      zipBtn.className = "btn btn-download-zip";
       zipBtn.textContent = t("btn-download-zip");
-      zipBtn.addEventListener("click", () =>
-        downloadZip(filePairs),
-      );
+      zipBtn.addEventListener("click", () => downloadZip(filePairs));
       resultsDiv.appendChild(zipBtn);
     }
   } catch (err) {
@@ -537,11 +544,28 @@ async function runExport() {
   }
 }
 
+function downloadAllFiles(files) {
+  for (const { fname, url } of files) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+}
+
 function downloadZip(filePairs) {
   const createZip = pyodide.globals.get("create_zip");
+  if (!createZip) {
+    log(t("log-proc-error", { err: "create_zip is not available" }), "error");
+    return;
+  }
+  let zipBytesProxy;
   try {
     const jsonStr = JSON.stringify(filePairs);
-    const zipBytes = createZip(jsonStr);
+    zipBytesProxy = createZip(jsonStr);
+    const zipBytes = zipBytesProxy.toJs();
     const blob = new Blob([zipBytes], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -551,7 +575,10 @@ function downloadZip(filePairs) {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  } catch (err) {
+    log(t("log-proc-error", { err: err }), "error");
   } finally {
+    zipBytesProxy?.destroy();
     createZip.destroy();
   }
 }

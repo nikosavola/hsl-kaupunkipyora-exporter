@@ -334,7 +334,8 @@ textarea:focus {
   white-space: nowrap;
 }
 
-.btn-download-all {
+.btn-download-all,
+.btn-download-zip {
   width: 100%;
   margin-top: 12px;
   background: var(--success);
@@ -343,7 +344,8 @@ textarea:focus {
     0 2px 4px -2px rgb(16 185 129 / 20%);
 }
 
-.btn-download-all:hover {
+.btn-download-all:hover,
+.btn-download-zip:hover {
   background: #059669;
   box-shadow:
     0 6px 8px -1px rgb(16 185 129 / 25%),
