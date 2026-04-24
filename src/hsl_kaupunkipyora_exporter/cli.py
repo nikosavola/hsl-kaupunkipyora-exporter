@@ -95,8 +95,7 @@ def main(argv: list[str] | None = None) -> None:
     # Fetch station coordinates
     if args.use_route and not (args.api_key or os.environ.get("DIGITRANSIT_API_KEY")):
         logging.error(
-            "Digitransit API key is required when using --use-route. "
-            "Provide it via --api-key or DIGITRANSIT_API_KEY environment variable."
+            "Digitransit API key is required when using --use-route. Provide it via --api-key or DIGITRANSIT_API_KEY environment variable."
         )
         sys.exit(1)
 
