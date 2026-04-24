@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from hsl_kaupunkipyora_exporter.parser import Ride
 from hsl_kaupunkipyora_exporter.routing import Point, fetch_route
 from hsl_kaupunkipyora_exporter.stations import Station, StationLookup
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
+
+if TYPE_CHECKING:
+    from hsl_kaupunkipyora_exporter.writer.base import _RideData
 
 EmitFn = Callable[[str, str], None]
 
@@ -29,6 +32,7 @@ class ExportResult:
     written: int = 0
     skipped: int = 0
     files: list[tuple[str, str]] = field(default_factory=list)
+    ride_data: list[_RideData] = field(default_factory=list)
 
 
 def _resolve_ride_stations(
@@ -99,6 +103,7 @@ def export_rides(  # noqa: PLR0913
     api_key: str | None = None,
     dry_run: bool = False,
     on_event: Callable[[ExportEvent], None] | None = None,
+    collect_ride_data: bool = False,
 ) -> ExportResult:
     """Iterate *rides*, resolve stations, optionally route, and export.
 
@@ -117,6 +122,9 @@ def export_rides(  # noqa: PLR0913
             event instead.
         on_event: Optional callback invoked for every notable event (logging,
             progress reporting, etc.).
+        collect_ride_data: When ``True``, also populate
+            :attr:`ExportResult.ride_data` with the raw per-ride tuples
+            needed by :meth:`BaseRideWriter.build_merged`.
 
     Returns:
         An :class:`ExportResult` with tallies and ``(filename, xml)`` pairs.
@@ -145,6 +153,9 @@ def export_rides(  # noqa: PLR0913
             ride, dep, ret, route_points=route_points, include_points=include_points
         )
         filename = writer.filename_for(ride)
+
+        if collect_ride_data:
+            result.ride_data.append((ride, dep, ret, route_points, include_points))
 
         if dry_run:
             _emit(f"[WOULD WRITE] {filename}{_ride_detail_str(ride)}")

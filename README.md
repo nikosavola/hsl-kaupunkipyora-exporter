@@ -84,6 +84,8 @@ The exporter supports three distinct modes for handling geographic data:
 | `--api-key KEY`      | Digitransit API key (alternative to `DIGITRANSIT_API_KEY` env var) |
 | `--refresh-stations` | Force re-download of the bike station coordinate list              |
 | `-n`, `--dry-run`    | Preview which files would be written or skipped without writing    |
+| `--zip`              | Bundle all exported files into a single `rides.zip` archive        |
+| `--merge`            | Write one file with all rides (multi-track GPX / multi-activity TCX) |
 | `-v`, `--verbose`    | Enable verbose/debug logging                                       |
 
 ### TCX vs GPX

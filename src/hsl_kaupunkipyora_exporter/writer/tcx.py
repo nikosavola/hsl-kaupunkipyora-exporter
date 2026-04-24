@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from hsl_kaupunkipyora_exporter.routing import Point
     from hsl_kaupunkipyora_exporter.stations import Station
 
+    from .base import _RideData
+
 logger = logging.getLogger(__name__)
 
 MIN_ROUTE_POINTS = 2
@@ -56,25 +58,16 @@ class TCXWriter(BaseRideWriter):
         ET.SubElement(pos, "LongitudeDegrees").text = str(lon)
         ET.SubElement(tp, "DistanceMeters").text = f"{dist_meters:.1f}"
 
-    def _build_tcx(
+    def _add_activity(  # noqa: PLR0913, PLR0917
         self,
+        activities: ET.Element,
         ride: Ride,
         departure_coords: Station,
         return_coords: Station,
         route_points: list[Point] | None = None,
         include_points: bool = True,
-    ) -> str:
-        """Build a TCX string for a single ride."""
-        root = ET.Element(
-            "TrainingCenterDatabase",
-            {
-                "xmlns": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2",
-                "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                "xsi:schemaLocation": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd",
-            },
-        )
-
-        activities = ET.SubElement(root, "Activities")
+    ) -> None:
+        """Append a single ``<Activity>`` element to *activities*."""
         activity = ET.SubElement(activities, "Activity", {"Sport": "Cycling"})
 
         dep_time, ret_time = ride_utc_window(ride)
@@ -107,8 +100,6 @@ class TCXWriter(BaseRideWriter):
                     track, dep_time, ret_time, ride.distance_km, route_points
                 )
 
-        return ET.tostring(root, encoding="utf-8", xml_declaration=True).decode("utf-8")
-
     def _add_route_points(
         self,
         track: ET.Element,
@@ -120,3 +111,51 @@ class TCXWriter(BaseRideWriter):
         """Add route points to the TCX track, scaling distance and time."""
         for ip in interpolate_route(route_points, dep_time, ret_time, ride_dist_km):
             self._add_trackpoint(track, ip.time, ip.lat, ip.lon, ip.distance_m)
+
+    def _build_tcx(
+        self,
+        ride: Ride,
+        departure_coords: Station,
+        return_coords: Station,
+        route_points: list[Point] | None = None,
+        include_points: bool = True,
+    ) -> str:
+        """Build a TCX string for a single ride."""
+        root = self._make_root()
+        activities = ET.SubElement(root, "Activities")
+        self._add_activity(
+            activities, ride, departure_coords, return_coords, route_points, include_points
+        )
+        return ET.tostring(root, encoding="utf-8", xml_declaration=True).decode("utf-8")
+
+    @staticmethod
+    def _make_root() -> ET.Element:
+        """Return a new ``<TrainingCenterDatabase>`` root element."""
+        return ET.Element(
+            "TrainingCenterDatabase",
+            {
+                "xmlns": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2",
+                "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                "xsi:schemaLocation": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd",
+            },
+        )
+
+    def build_merged(self, rides: list[_RideData]) -> str:
+        """Build a single TCX string containing multiple activities.
+
+        Each ride becomes a separate ``<Activity>`` element under the shared
+        ``<Activities>`` container.
+
+        Args:
+            rides: Sequence of ride data tuples to merge.
+
+        Returns:
+            A TCX XML string with one ``<Activity>`` per ride.
+        """
+        root = self._make_root()
+        activities = ET.SubElement(root, "Activities")
+
+        for ride, dep, ret, route_pts, inc_pts in rides:
+            self._add_activity(activities, ride, dep, ret, route_pts, inc_pts)
+
+        return ET.tostring(root, encoding="utf-8", xml_declaration=True).decode("utf-8")
