@@ -80,12 +80,12 @@ jobs:
         run: just build-web
       - name: Install Playwright
         run: |
-          pip install playwright
+          uv pip install --system playwright
           playwright install --with-deps chromium
       - name: Start local server
         run: |
           cd web && python -m http.server 8000 &
-          sleep 2
+          timeout 10 bash -c 'until curl -sf http://localhost:8000/ > /dev/null; do sleep 0.5; done'
       - name: Run smoke test
         run: python tests/web_smoke.py
       - name: Upload log artifact

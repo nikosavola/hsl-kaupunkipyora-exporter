@@ -29,9 +29,9 @@ def main() -> int:
     """Run the end-to-end smoke test and return an exit code."""
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
-        page = browser.new_page()
-
         try:
+            page = browser.new_page()
+
             # 1. Open the app
             page.goto(BASE_URL)
 
@@ -68,7 +68,10 @@ def main() -> int:
 
         finally:
             # 6. Capture log panel for artifact upload
-            log_text = page.locator("#log").inner_text()
+            try:
+                log_text = page.locator("#log").inner_text()
+            except Exception:
+                log_text = "(could not capture log)"
             log_path = Path("web-smoke-log.txt")
             log_path.write_text(log_text)
             print(f"Log saved to {log_path}")
