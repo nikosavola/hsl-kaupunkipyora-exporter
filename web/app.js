@@ -23,7 +23,7 @@ const i18n = {
     "api-key-label": "Digitransit API key",
     optional: "(optional)",
     "api-key-placeholder":
-      "For station coordinates — get a free key at digitransit.fi",
+      "For station coordinates and recommended cycling route — get a free key at digitransit.fi",
     "api-key-hint":
       "Required for coordinates. Without it, rides that can't be matched to bundled station data will be skipped.",
     "get-key-link": "Get a key.",
