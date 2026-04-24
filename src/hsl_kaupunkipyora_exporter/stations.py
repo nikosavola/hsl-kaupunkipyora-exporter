@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 from collections.abc import Generator, Iterable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from importlib import resources
 from pathlib import Path
 
@@ -23,6 +24,8 @@ HTTP_UNAUTHORIZED = 401
 # Cache file lives next to the user's data (XDG_CACHE_HOME or ~/.cache).
 _CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
 CACHE_PATH = _CACHE_DIR / "hsl-kaupunkipyora-exporter" / "stations.json"
+
+DEFAULT_CACHE_TTL_DAYS = 30
 
 _GRAPHQL_RESOURCE = resources.files("hsl_kaupunkipyora_exporter.graphql").joinpath(
     "stations.graphql"
@@ -72,23 +75,62 @@ def fetch_stations(api_key: str | None = None) -> Generator[Station]:
 
 
 def _save_cache(stations: list[Station]) -> None:
-    """Save the station list to a local JSON cache."""
+    """Save the station list to a local JSON cache with a timestamp envelope."""
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    data = [{"name": s.name, "lat": s.lat, "lon": s.lon} for s in stations]
+    envelope = {
+        "fetched_at": datetime.now(UTC).isoformat(),
+        "stations": [{"name": s.name, "lat": s.lat, "lon": s.lon} for s in stations],
+    }
     CACHE_PATH.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(envelope, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     logger.debug("Station cache written to %s", CACHE_PATH)
 
 
-def _load_cache() -> list[Station] | None:
-    """Load the station list from the local JSON cache."""
+def _parse_cache_envelope(raw: dict | list) -> tuple[list[dict], datetime | None]:
+    """Extract station dicts and fetch timestamp from a decoded cache file.
+
+    Supports the legacy format (plain list without envelope).
+
+    Returns:
+        A tuple of ``(station_dicts, fetched_at)``. ``fetched_at`` is ``None``
+        for the legacy format, which carries no timestamp.
+    """
+    if isinstance(raw, list):
+        return raw, None
+    return raw["stations"], datetime.fromisoformat(raw["fetched_at"])
+
+
+def _is_expired(fetched_at: datetime | None, ttl_days: int | None) -> bool:
+    """Return True if *fetched_at* is older than *ttl_days* (or unknown)."""
+    if ttl_days is None:
+        return False
+    if fetched_at is None:
+        return True
+    return (datetime.now(UTC) - fetched_at).total_seconds() / 86400 >= ttl_days
+
+
+def _load_cache(ttl_days: int | None = None) -> list[Station] | None:
+    """Load the station list from the local JSON cache.
+
+    Args:
+        ttl_days: Maximum cache age in days. If None, any age is accepted.
+            If the cache is older than *ttl_days* (or has no timestamp), returns None.
+
+    Returns:
+        The cached station list, or None if the cache is missing, corrupt, or expired.
+    """
     if not CACHE_PATH.exists():
         return None
     try:
-        data = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
-        return [Station(name=s["name"], lat=s["lat"], lon=s["lon"]) for s in data]
-    except (json.JSONDecodeError, KeyError):
+        raw = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
+        stations_data, fetched_at = _parse_cache_envelope(raw)
+        if _is_expired(fetched_at, ttl_days):
+            return None
+        return [
+            Station(name=s["name"], lat=s["lat"], lon=s["lon"]) for s in stations_data
+        ]
+    except (json.JSONDecodeError, KeyError, ValueError):
         logger.warning("Corrupt station cache at %s – will re-download.", CACHE_PATH)
         return None
 
@@ -112,16 +154,27 @@ def _load_bundled() -> list[Station] | None:
     return stations
 
 
-def get_stations(refresh: bool = False, api_key: str | None = None) -> list[Station]:
+def get_stations(
+    refresh: bool = False,
+    cache_ttl_days: int | None = None,
+    api_key: str | None = None,
+) -> list[Station]:
     """Return the station list, using a local cache when available.
 
-    On any live-fetch failure this falls back to the local disk cache (even
-    when *refresh* was requested), and only as a last resort to the dataset
-    bundled with the package.
+    The cache is automatically refreshed when it is older than *cache_ttl_days*.
+    If the refresh fetch itself fails (or returns an empty list), this falls
+    back to the stale cache regardless of age, and only as a last resort to
+    the dataset bundled with the package. If the fetch succeeds but writing
+    the new cache to disk fails, the freshly fetched stations are still
+    returned; only the write is logged as a warning.
 
     Args:
-        refresh: Force a fresh download even when a cache exists.
-        api_key: Digitransit API key. If not provided, uses DIGITRANSIT_API_KEY environment variable.
+        refresh: Force a fresh download even when a valid cache exists.
+        cache_ttl_days: Maximum cache age in days before an automatic refresh is
+            triggered. Defaults to the ``HSL_KAUPUNKIPYORA_CACHE_TTL_DAYS``
+            environment variable, or :data:`DEFAULT_CACHE_TTL_DAYS` (30) if not set.
+        api_key: Digitransit API key. If not provided, uses DIGITRANSIT_API_KEY
+            environment variable.
 
     Raises:
         OSError: If the live fetch fails and no cache or bundled fallback is
@@ -135,8 +188,16 @@ def get_stations(refresh: bool = False, api_key: str | None = None) -> list[Stat
         ValueError: If the live fetch fails and no cache or bundled fallback is
             available.
     """
+    ttl = (
+        cache_ttl_days
+        if cache_ttl_days is not None
+        else int(
+            os.environ.get("HSL_KAUPUNKIPYORA_CACHE_TTL_DAYS", DEFAULT_CACHE_TTL_DAYS)
+        )
+    )
+
     if not refresh:
-        cached = _load_cache()
+        cached = _load_cache(ttl_days=ttl)
         if cached is not None:
             logger.info("Loaded %d stations from cache.", len(cached))
             return cached
@@ -149,15 +210,24 @@ def get_stations(refresh: bool = False, api_key: str | None = None) -> list[Stat
             raise ValueError(msg)  # noqa: TRY301
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
         logger.warning("Live fetch failed – checking for a fallback station list.")
-        cached = _load_cache()
-        if cached is not None:
-            logger.warning("Falling back to local station cache.")
-            return cached
+        stale = _load_cache(ttl_days=None)
+        if stale is not None:
+            logger.warning("Falling back to stale cache (%d stations).", len(stale))
+            return stale
         bundled = _load_bundled()
         if bundled is not None:
             return bundled
         raise
-    _save_cache(stations)
+
+    try:
+        _save_cache(stations)
+    except OSError:
+        logger.warning(
+            "Fetched %d stations but failed to write the cache to %s.",
+            len(stations),
+            CACHE_PATH,
+        )
+
     return stations
 
 

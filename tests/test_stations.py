@@ -1,6 +1,7 @@
 """Tests for station lookup and the Digitransit station-list fetch."""
 
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -13,6 +14,8 @@ from hsl_kaupunkipyora_exporter.stations import (
     Station,
     StationLookup,
     _load_bundled,
+    _load_cache,
+    _save_cache,
     fetch_stations,
     get_stations,
 )
@@ -131,3 +134,159 @@ def test_get_stations_falls_back_to_bundled_on_fetch_error(
     result = get_stations(refresh=True)
     assert isinstance(result, list)
     assert len(result) > 0
+
+
+# ---------------------------------------------------------------------------
+# Cache TTL tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def cache_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Return a temp path and patch CACHE_PATH in the stations module."""
+    path = tmp_path / "stations.json"
+    monkeypatch.setattr(stations_mod, "CACHE_PATH", path)
+    return path
+
+
+def _write_envelope(path: Path, age_days: float, station_list: list[Station]) -> None:
+    """Write a cache envelope with a timestamp *age_days* days in the past."""
+    fetched_at = datetime.now(UTC) - timedelta(days=age_days)
+    envelope = {
+        "fetched_at": fetched_at.isoformat(),
+        "stations": [
+            {"name": s.name, "lat": s.lat, "lon": s.lon} for s in station_list
+        ],
+    }
+    path.write_text(json.dumps(envelope), encoding="utf-8")
+
+
+def test_save_cache_writes_envelope(cache_path: Path, stations: list[Station]) -> None:
+    _save_cache(stations)
+    raw = json.loads(cache_path.read_text(encoding="utf-8"))
+    assert "fetched_at" in raw
+    assert "stations" in raw
+    assert len(raw["stations"]) == len(stations)
+    # fetched_at must be a valid ISO-8601 timestamp
+    datetime.fromisoformat(raw["fetched_at"])
+
+
+def test_load_cache_fresh(cache_path: Path, stations: list[Station]) -> None:
+    _write_envelope(cache_path, age_days=1, station_list=stations)
+    result = _load_cache(ttl_days=30)
+    assert result is not None
+    assert [s.name for s in result] == [s.name for s in stations]
+
+
+def test_load_cache_expired_returns_none(
+    cache_path: Path, stations: list[Station]
+) -> None:
+    _write_envelope(cache_path, age_days=31, station_list=stations)
+    assert _load_cache(ttl_days=30) is None
+
+
+def test_load_cache_no_ttl_check(cache_path: Path, stations: list[Station]) -> None:
+    _write_envelope(cache_path, age_days=365, station_list=stations)
+    result = _load_cache(ttl_days=None)
+    assert result is not None
+    assert len(result) == len(stations)
+
+
+def test_load_cache_legacy_format_with_ttl_returns_none(
+    cache_path: Path, stations: list[Station]
+) -> None:
+    """Old plain-list cache has no timestamp so it is treated as expired."""
+    data = [{"name": s.name, "lat": s.lat, "lon": s.lon} for s in stations]
+    cache_path.write_text(json.dumps(data), encoding="utf-8")
+    assert _load_cache(ttl_days=30) is None
+
+
+def test_load_cache_legacy_format_without_ttl_loaded(
+    cache_path: Path, stations: list[Station]
+) -> None:
+    """Old plain-list cache is still usable when TTL is not checked."""
+    data = [{"name": s.name, "lat": s.lat, "lon": s.lon} for s in stations]
+    cache_path.write_text(json.dumps(data), encoding="utf-8")
+    result = _load_cache(ttl_days=None)
+    assert result is not None
+    assert len(result) == len(stations)
+
+
+def test_get_stations_uses_fresh_cache(
+    cache_path: Path, stations: list[Station]
+) -> None:
+    _write_envelope(cache_path, age_days=1, station_list=stations)
+    with patch.object(stations_mod, "fetch_stations") as mock_fetch:
+        result = get_stations(cache_ttl_days=30)
+    mock_fetch.assert_not_called()
+    assert len(result) == len(stations)
+
+
+def test_get_stations_refreshes_expired_cache(
+    cache_path: Path, stations: list[Station]
+) -> None:
+    _write_envelope(cache_path, age_days=31, station_list=stations)
+    new_stations = [Station(name="Uusi asema", lat=60.2, lon=25.0)]
+    with patch.object(stations_mod, "fetch_stations", return_value=iter(new_stations)):
+        result = get_stations(cache_ttl_days=30)
+    assert result == new_stations
+
+
+def test_get_stations_fallback_to_stale_on_refresh_failure(
+    cache_path: Path, stations: list[Station]
+) -> None:
+    _write_envelope(cache_path, age_days=31, station_list=stations)
+    with patch.object(
+        stations_mod, "fetch_stations", side_effect=OSError("network down")
+    ):
+        result = get_stations(cache_ttl_days=30)
+    # Should fall back to the stale cache instead of raising
+    assert len(result) == len(stations)
+
+
+def test_get_stations_forced_refresh_uses_network(
+    cache_path: Path, stations: list[Station]
+) -> None:
+    _write_envelope(cache_path, age_days=1, station_list=stations)
+    new_stations = [Station(name="Uusi asema", lat=60.2, lon=25.0)]
+    with patch.object(stations_mod, "fetch_stations", return_value=iter(new_stations)):
+        result = get_stations(refresh=True, cache_ttl_days=30)
+    assert result == new_stations
+
+
+def test_get_stations_returns_fresh_data_even_if_cache_write_fails(
+    cache_path: Path,
+) -> None:
+    """A successful fetch must not be discarded just because saving it fails."""
+    new_stations = [Station(name="Uusi asema", lat=60.2, lon=25.0)]
+    with (
+        patch.object(stations_mod, "fetch_stations", return_value=iter(new_stations)),
+        patch.object(stations_mod, "_save_cache", side_effect=OSError("disk full")),
+    ):
+        result = get_stations(refresh=True, cache_ttl_days=30)
+    assert result == new_stations
+    assert not cache_path.exists()
+
+
+def test_get_stations_empty_fetch_falls_back_to_stale_cache(
+    cache_path: Path, stations: list[Station]
+) -> None:
+    """An empty API response must not silently poison the cache for 30 days."""
+    _write_envelope(cache_path, age_days=31, station_list=stations)
+    with patch.object(stations_mod, "fetch_stations", return_value=iter([])):
+        result = get_stations(cache_ttl_days=30)
+    assert len(result) == len(stations)
+    # The stale envelope on disk must not have been overwritten with "[]".
+    raw = json.loads(cache_path.read_text(encoding="utf-8"))
+    assert len(raw["stations"]) == len(stations)
+
+
+def test_get_stations_env_var_ttl(
+    cache_path: Path, stations: list[Station], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("HSL_KAUPUNKIPYORA_CACHE_TTL_DAYS", "7")
+    _write_envelope(cache_path, age_days=8, station_list=stations)
+    new_stations = [Station(name="Uusi asema", lat=60.2, lon=25.0)]
+    with patch.object(stations_mod, "fetch_stations", return_value=iter(new_stations)):
+        result = get_stations()  # no explicit ttl — reads env var
+    assert result == new_stations
