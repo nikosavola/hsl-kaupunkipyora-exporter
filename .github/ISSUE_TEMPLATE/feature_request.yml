@@ -12,8 +12,7 @@ body:
     attributes:
       label: Problem you're trying to solve
       description: >
-        Describe the use-case or limitation that motivates this request.
-        "I'm frustrated when …" is a great way to start.
+        Describe the use-case or limitation that motivates this request. "I'm frustrated when …" is a good start.
     validations:
       required: true
 
