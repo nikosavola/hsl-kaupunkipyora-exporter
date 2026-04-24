@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC
 from typing import TYPE_CHECKING, final, override
-from zoneinfo import ZoneInfo
 
 import gpxpy.gpx
 
-from hsl_kaupunkipyora_exporter.writer._common import interpolate_route
+from hsl_kaupunkipyora_exporter.writer._common import interpolate_route, ride_utc_window
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
 
 if TYPE_CHECKING:
@@ -20,7 +18,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 MIN_ROUTE_POINTS = 2
-_HELSINKI = ZoneInfo("Europe/Helsinki")
 
 
 @final
@@ -77,8 +74,7 @@ class GPXWriter(BaseRideWriter):
         segment = gpxpy.gpx.GPXTrackSegment()
         track.segments.append(segment)
 
-        dep_time = ride.departure_time.replace(tzinfo=_HELSINKI).astimezone(UTC)
-        ret_time = ride.return_time.replace(tzinfo=_HELSINKI).astimezone(UTC)
+        dep_time, ret_time = ride_utc_window(ride)
 
         if not route_points:
             # Simple straight-line fallback

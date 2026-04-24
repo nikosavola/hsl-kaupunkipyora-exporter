@@ -142,12 +142,13 @@ def test_tcx_timestamps_dst_fall_back(tcx_writer: TCXWriter) -> None:
     tcx_str = tcx_writer._build_tcx(ride, DEP, RET)
     root = ET.fromstring(tcx_str)  # noqa: S314
     ns = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
-    # 03:30 EEST = 00:30 UTC
+    # 03:30 is ambiguous during fall-back; fold=0 (default) picks the first
+    # occurrence (EEST/UTC+3), so 03:30 EEST = 00:30 UTC.
     id_el = root.find(".//tcx:Id", ns)
     assert id_el is not None
     assert id_el.text is not None
     assert id_el.text.startswith("2024-10-27T00:30:00")
     time_els = root.findall(".//tcx:Time", ns)
-    # 04:30 is after fall-back so EET (UTC+2) = 02:30 UTC
+    # 04:30 is unambiguous (EET/UTC+2) = 02:30 UTC
     assert time_els[1].text is not None
     assert time_els[1].text.startswith("2024-10-27T02:30:00")

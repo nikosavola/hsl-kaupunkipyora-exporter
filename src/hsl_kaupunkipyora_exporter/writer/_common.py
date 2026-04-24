@@ -2,13 +2,69 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
 from haversine import haversine  # type: ignore[import-untyped]
 
 from hsl_kaupunkipyora_exporter.routing import Point
+
+if TYPE_CHECKING:
+    from hsl_kaupunkipyora_exporter.parser import Ride
+
+logger = logging.getLogger(__name__)
+
+_HELSINKI = ZoneInfo("Europe/Helsinki")
+
+
+def to_utc(naive_local: datetime) -> datetime:
+    """Convert a naive Helsinki-local datetime to an aware UTC datetime.
+
+    Returns:
+        The equivalent aware datetime in UTC.
+
+    Raises:
+        ValueError: If *naive_local* already carries a ``tzinfo``.
+    """
+    if naive_local.tzinfo is not None:
+        msg = f"Expected a naive datetime, got one with tzinfo: {naive_local!r}"
+        raise ValueError(msg)
+    return naive_local.replace(tzinfo=_HELSINKI).astimezone(UTC)
+
+
+def ride_utc_window(ride: Ride) -> tuple[datetime, datetime]:
+    """Return the ride's (departure, return) instants converted to UTC.
+
+    The departure time is converted directly. The return time is derived
+    from the departure time plus ``ride.duration_min`` when that field is
+    available, rather than converted independently — this avoids the
+    duration silently gaining or losing an hour when the ride falls in the
+    repeated (fall-back) or skipped (spring-forward) local hour, where the
+    departure and return instants can each resolve to a different UTC
+    offset.  When ``duration_min`` is unavailable, both instants are
+    converted independently and a warning is logged if that produces a
+    non-positive duration.
+    """
+    dep_utc = to_utc(ride.departure_time)
+    if ride.duration_min is not None:
+        return dep_utc, dep_utc + timedelta(minutes=ride.duration_min)
+
+    ret_utc = to_utc(ride.return_time)
+    if ret_utc <= dep_utc:
+        logger.warning(
+            "Ride %s → %s has a non-positive duration after UTC conversion "
+            "(%s to %s); the local times likely fall across a DST transition "
+            "and no reported duration was available to disambiguate.",
+            ride.departure_station,
+            ride.return_station,
+            dep_utc,
+            ret_utc,
+        )
+    return dep_utc, ret_utc
 
 
 @dataclass(frozen=True, slots=True)

@@ -121,9 +121,9 @@ def test_gpx_timestamps_converted_from_helsinki_summer(gpx_writer: GPXWriter) ->
     """Helsinki summer time (EEST, UTC+3) is correctly converted to UTC."""
     ride = Ride(
         departure_station="A",
-        departure_time=datetime(2024, 6, 1, 14, 30),  # noqa: DTZ001
+        departure_time=datetime(2024, 6, 1, 14, 30),
         return_station="B",
-        return_time=datetime(2024, 6, 1, 14, 45),  # noqa: DTZ001
+        return_time=datetime(2024, 6, 1, 14, 45),
     )
     gpx = gpx_writer._build_gpx(ride, DEP, RET)
     pts = gpx.tracks[0].segments[0].points
@@ -135,9 +135,9 @@ def test_gpx_timestamps_converted_from_helsinki_winter(gpx_writer: GPXWriter) ->
     """Helsinki winter time (EET, UTC+2) is correctly converted to UTC."""
     ride = Ride(
         departure_station="A",
-        departure_time=datetime(2024, 1, 15, 10, 0),  # noqa: DTZ001
+        departure_time=datetime(2024, 1, 15, 10, 0),
         return_station="B",
-        return_time=datetime(2024, 1, 15, 10, 20),  # noqa: DTZ001
+        return_time=datetime(2024, 1, 15, 10, 20),
     )
     gpx = gpx_writer._build_gpx(ride, DEP, RET)
     pts = gpx.tracks[0].segments[0].points
@@ -149,12 +149,14 @@ def test_gpx_timestamps_dst_fall_back(gpx_writer: GPXWriter) -> None:
     """Ride spanning the DST fall-back boundary (EEST→EET) on 27 Oct 2024."""
     ride = Ride(
         departure_station="A",
-        departure_time=datetime(2024, 10, 27, 3, 30),  # noqa: DTZ001
+        departure_time=datetime(2024, 10, 27, 3, 30),
         return_station="B",
-        return_time=datetime(2024, 10, 27, 4, 30),  # noqa: DTZ001
+        return_time=datetime(2024, 10, 27, 4, 30),
     )
     gpx = gpx_writer._build_gpx(ride, DEP, RET)
     pts = gpx.tracks[0].segments[0].points
-    # 03:30 EEST = 00:30 UTC; 04:30 is after fall-back so EET (UTC+2) = 02:30 UTC
+    # 03:30 is ambiguous during fall-back; fold=0 (default) picks the first
+    # occurrence (EEST/UTC+3), so 03:30 EEST = 00:30 UTC.
+    # 04:30 is unambiguous (EET/UTC+2) = 02:30 UTC.
     assert pts[0].time == datetime(2024, 10, 27, 0, 30, tzinfo=UTC)
     assert pts[1].time == datetime(2024, 10, 27, 2, 30, tzinfo=UTC)

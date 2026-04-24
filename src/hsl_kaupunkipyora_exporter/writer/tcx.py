@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import logging
 import xml.etree.ElementTree as ET  # noqa: S405
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import TYPE_CHECKING, final, override
-from zoneinfo import ZoneInfo
 
-from hsl_kaupunkipyora_exporter.writer._common import interpolate_route
+from hsl_kaupunkipyora_exporter.writer._common import interpolate_route, ride_utc_window
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
 
 if TYPE_CHECKING:
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 MIN_ROUTE_POINTS = 2
-_HELSINKI = ZoneInfo("Europe/Helsinki")
 
 
 @final
@@ -79,10 +77,11 @@ class TCXWriter(BaseRideWriter):
         activities = ET.SubElement(root, "Activities")
         activity = ET.SubElement(activities, "Activity", {"Sport": "Cycling"})
 
-        id_val = ride.departure_time.replace(tzinfo=_HELSINKI).astimezone(UTC).isoformat()
+        dep_time, ret_time = ride_utc_window(ride)
+        id_val = dep_time.isoformat()
         ET.SubElement(activity, "Id").text = id_val
 
-        total_seconds = (ride.return_time - ride.departure_time).total_seconds()
+        total_seconds = (ret_time - dep_time).total_seconds()
         dist_meters = (
             (ride.distance_km * 1000.0) if ride.distance_km is not None else 0.0
         )
@@ -95,8 +94,6 @@ class TCXWriter(BaseRideWriter):
 
         if include_points:
             track = ET.SubElement(lap, "Track")
-            dep_time = ride.departure_time.replace(tzinfo=_HELSINKI).astimezone(UTC)
-            ret_time = ride.return_time.replace(tzinfo=_HELSINKI).astimezone(UTC)
 
             if not route_points or len(route_points) < MIN_ROUTE_POINTS:
                 self._add_trackpoint(
