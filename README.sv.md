@@ -31,7 +31,7 @@ uvx hsl-kaupunkipyora-exporter rides.html
 
 - **Sammanfattning**: Endast sträcka och tid från HRT, inga GPS-punkter.
 - `--linear`: Rak linje mellan stationerna.
-- `--use-route`: Rekommenderad cykelrutt via [Digitransit API](https://digitransit.fi/en/developers/apis/) (kräver en gratis
-  API-nyckel).
+- `--use-route`: Rekommenderad cykelrutt via [Digitransit API](https://digitransit.fi/en/developers/apis/) (kräver en
+  gratis API-nyckel).
 
 **TCX** är standardformatet eftersom det låter Strava använda HSL:s exakta sträcka. GPX stöder inte detta.
