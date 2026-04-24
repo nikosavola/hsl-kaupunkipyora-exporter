@@ -56,7 +56,7 @@ def interpolate_route(
 
     result: list[InterpolatedPoint] = []
     for i, (lat, lon) in enumerate(coords):
-        frac = cum_dists[i] / total_dist if total_dist > 0 else (i / (len(coords) - 1))
+        frac = cum_dists[i] / total_dist if total_dist > 0 else (i / max(len(coords) - 1, 1))
         result.append(
             InterpolatedPoint(
                 lat=lat,
