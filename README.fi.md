@@ -4,7 +4,8 @@
 [![fi](https://img.shields.io/badge/lang-fi-blue.svg)](./README.fi.md)
 [![sv](https://img.shields.io/badge/lang-sv-yellow.svg)](./README.sv.md)
 
-Muuta [HSL:n kaupunkipyörien](https://www.hsl.fi/omat-tiedot/kaupunkipyorat/matkahistoria) ajohistoriasi Strava-yhteensopiviksi TCX- tai GPX-tiedostoiksi.
+Muuta [HSL:n kaupunkipyörien](https://www.hsl.fi/omat-tiedot/kaupunkipyorat/matkahistoria) ajohistoriasi
+Strava-yhteensopiviksi TCX- tai GPX-tiedostoiksi.
 
 ## Asennus
 
@@ -37,31 +38,32 @@ HSL Kaupunkipyörä Exporter tukee kolmea eri tapaa reitittää paikkatiedot:
 
 1. **Vain yhteenveto (oletus)**: Tuottaa TCX-tiedoston, joka sisältää HSL:n ilmoittaman matkan ja keston, mutta ei
    GPS-reittipisteitä. Tämä on tarkin tapa kirjata kilometrit Stravaan ilman reitin arvaamista.
-1. **Suora reitti (`--linear`)**: Tuottaa suoran viivan lähtö- ja palautusaseman välillä.
-   Hyödyllinen, jos haluat yksinkertaisen visualisoinnin kartalle.
+1. **Suora reitti (`--linear`)**: Tuottaa suoran viivan lähtö- ja palautusaseman välillä. Hyödyllinen, jos haluat
+   yksinkertaisen visualisoinnin kartalle.
 1. **Reititetty polku (`--use-route`)**: Hakee ehdotetun pyöräilyreitin
-   [Digitransit-rajapinnasta](https://digitransit.fi/en/developers/apis/). Tämä tarjoaa realistisen reitin kartalla
-   sekä säilyttää HSL:n antaman matkan ja keston (TCX:ää käytettäessä). Vaatii
+   [Digitransit-rajapinnasta](https://digitransit.fi/en/developers/apis/). Tämä tarjoaa realistisen reitin kartalla sekä
+   säilyttää HSL:n antaman matkan ja keston (TCX:ää käytettäessä). Vaatii
    [ilmaisen API-avaimen](https://digitransit.fi/en/developers/api-registration/).
 
 ### Valinnat
 
-| Lippu                | Kuvaus                                                                 |
-| -------------------- | ---------------------------------------------------------------------- |
-| `--output-dir DIR`   | Hakemisto, johon tiedostot kirjoitetaan (oletus: `./tcx_output`)       |
-| `--format FMT`       | Tiedostomuoto: `tcx` (oletus) tai `gpx`.                                 |
-| `--linear`           | Käytä suoraa viivaa asemien välillä                                    |
-| `--use-route`        | Käytä HSL:n ehdottamaa pyöräilyreittiä suoran viivan sijaan            |
+| Lippu                | Kuvaus                                                                         |
+| -------------------- | ------------------------------------------------------------------------------ |
+| `--output-dir DIR`   | Hakemisto, johon tiedostot kirjoitetaan (oletus: `./tcx_output`)               |
+| `--format FMT`       | Tiedostomuoto: `tcx` (oletus) tai `gpx`.                                       |
+| `--linear`           | Käytä suoraa viivaa asemien välillä                                            |
+| `--use-route`        | Käytä HSL:n ehdottamaa pyöräilyreittiä suoran viivan sijaan                    |
 | `--api-key KEY`      | Digitransit API -avain (vaihtoehto `DIGITRANSIT_API_KEY`-ympäristömuuttujalle) |
-| `--refresh-stations` | Pakota pyöräasemien koordinaattilistan uudelleenlataus                 |
-| `-v`, `--verbose`    | Ota käyttöön laajennettu/debug-lokitus                                 |
+| `--refresh-stations` | Pakota pyöräasemien koordinaattilistan uudelleenlataus                         |
+| `-v`, `--verbose`    | Ota käyttöön laajennettu/debug-lokitus                                         |
 
 ### TCX vs GPX
 
 Vaikka GPX on yleisin tiedostomuoto, se ei tue ajetun kokonaismatkan antamista. Strava laskee matkan annettujen
 GPS-pisteiden perusteella.
 
-**TCX** on suositellumpi tiedostomuoto, koska sen avulla kaupunkipyörän antama etäisyyslukema pysyy tiedostossa GPS-reitistä riippumatta.
+**TCX** on suositellumpi tiedostomuoto, koska sen avulla kaupunkipyörän antama etäisyyslukema pysyy tiedostossa
+GPS-reitistä riippumatta.
 
 ```bash
 # Tuota TCX-tiedosto suoralla viivalla asemien välillä
@@ -72,7 +74,8 @@ uvx hsl-kaupunkipyora-exporter rides.txt --format tcx --linear
 
 Käyttääksesi HSL:n ehdottamaa todellista pyöräilyreittiä tarvitset Digitransit API -avaimen:
 
-1. Rekisteröidy ilmaiseksi osoitteessa [Digitransit Developer Portal](https://digitransit.fi/en/developers/api-registration/).
+1. Rekisteröidy ilmaiseksi osoitteessa
+   [Digitransit Developer Portal](https://digitransit.fi/en/developers/api-registration/).
 1. Anna avain `--api-key`-lipulla tai `DIGITRANSIT_API_KEY`-ympäristömuuttujalla.
 
 ```bash
