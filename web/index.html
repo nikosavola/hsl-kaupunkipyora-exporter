@@ -1,88 +1,118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HSL Kaupunkipyörä Exporter</title>
-  <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1><span class="bike">🚲</span> HSL Kaupunkipyörä Exporter</h1>
-      <p>Export your Helsinki City Bike ride history as Strava-compatible GPX or TCX files — right in your browser.</p>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HSL Kaupunkipyörä Exporter</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><span class="bike">🚲</span> HSL Kaupunkipyörä Exporter</h1>
+        <p>
+          Export your Helsinki City Bike ride history as Strava-compatible GPX
+          or TCX files — right in your browser.
+        </p>
+      </header>
 
-    <!-- Step 1: Input -->
-    <section class="card">
-      <h2><span class="step">1</span> Provide ride history</h2>
-      <div class="drop-zone" id="dropZone">
-        <div class="icon">📄</div>
-        <div>Drop an HTML or text file here, or <strong>click to browse</strong></div>
-        <div class="filename hidden" id="fileName"></div>
-        <input type="file" id="fileInput" accept=".html,.htm,.txt,.text" />
-      </div>
-      <div class="or-divider">— or paste the text below —</div>
-      <div class="field">
-        <textarea id="textInput" placeholder="Paste your ride history text here …"></textarea>
-      </div>
-    </section>
-
-    <!-- Step 2: Options -->
-    <section class="card">
-      <h2><span class="step">2</span> Options</h2>
-      <div class="row">
+      <!-- Step 1: Input -->
+      <section class="card">
+        <h2><span class="step">1</span> Provide ride history</h2>
+        <div class="drop-zone" id="dropZone">
+          <div class="icon">📄</div>
+          <div>
+            Drop an HTML or text file here, or <strong>click to browse</strong>
+          </div>
+          <div class="filename hidden" id="fileName"></div>
+          <input type="file" id="fileInput" accept=".html,.htm,.txt,.text" />
+        </div>
+        <div class="or-divider">— or paste the text below —</div>
         <div class="field">
-          <label for="formatSelect">Export format</label>
-          <select id="formatSelect">
-            <option value="tcx" selected>TCX (recommended)</option>
-            <option value="gpx">GPX</option>
-          </select>
+          <textarea
+            id="textInput"
+            placeholder="Paste your ride history text here …"
+          ></textarea>
         </div>
-        <div class="field">
-          <label for="pathSelect">Path mode</label>
-          <select id="pathSelect">
-            <option value="summary" selected>Summary only</option>
-            <option value="linear">Linear path</option>
-            <option value="routed">Routed path (API key required)</option>
-          </select>
+      </section>
+
+      <!-- Step 2: Options -->
+      <section class="card">
+        <h2><span class="step">2</span> Options</h2>
+        <div class="row">
+          <div class="field">
+            <label for="formatSelect">Export format</label>
+            <select id="formatSelect">
+              <option value="tcx" selected>TCX (recommended)</option>
+              <option value="gpx">GPX</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="pathSelect">Path mode</label>
+            <select id="pathSelect">
+              <option value="summary" selected>Summary only</option>
+              <option value="linear">Linear path</option>
+              <option value="routed">Routed path (API key required)</option>
+            </select>
+          </div>
         </div>
-      </div>
-      <div class="field" style="margin-top:14px">
-        <label for="apiKey">Digitransit API key <span style="font-weight:normal;color:var(--text-muted)">(optional)</span></label>
-        <input type="password" id="apiKey" placeholder="For station coordinates — get a free key at digitransit.fi" />
-        <div class="hint">
-          Required for coordinates. Without it, rides that can't be matched to bundled station data will be skipped.
-          <a href="https://digitransit.fi/en/developers/api-registration/" target="_blank" rel="noopener">Get a key →</a>
+        <div class="field" style="margin-top: 14px">
+          <label for="apiKey"
+            >Digitransit API key
+            <span style="font-weight: normal; color: var(--text-muted)"
+              >(optional)</span
+            ></label
+          >
+          <input
+            type="password"
+            id="apiKey"
+            placeholder="For station coordinates — get a free key at digitransit.fi"
+          />
+          <div class="hint">
+            Required for coordinates. Without it, rides that can't be matched to
+            bundled station data will be skipped.
+            <a
+              href="https://digitransit.fi/en/developers/api-registration/"
+              target="_blank"
+              rel="noopener"
+              >Get a key →</a
+            >
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Step 3: Export -->
-    <section class="card">
-      <h2><span class="step">3</span> Export</h2>
-      <div class="export-bar">
-        <button class="btn btn-primary" id="exportBtn" disabled>
-          <span id="exportBtnText">Loading Pyodide…</span>
-        </button>
-        <span class="status" id="statusText"></span>
-      </div>
-      <div id="results" class="results hidden"></div>
-    </section>
+      <!-- Step 3: Export -->
+      <section class="card">
+        <h2><span class="step">3</span> Export</h2>
+        <div class="export-bar">
+          <button class="btn btn-primary" id="exportBtn" disabled>
+            <span id="exportBtnText">Loading Pyodide…</span>
+          </button>
+          <span class="status" id="statusText"></span>
+        </div>
+        <div id="results" class="results hidden"></div>
+      </section>
 
-    <!-- Log -->
-    <section class="card hidden" id="logCard">
-      <h2>Log</h2>
-      <div id="log"></div>
-    </section>
+      <!-- Log -->
+      <section class="card hidden" id="logCard">
+        <h2>Log</h2>
+        <div id="log"></div>
+      </section>
 
-    <footer>
-      Powered by <a href="https://pyodide.org" target="_blank" rel="noopener">Pyodide</a> ·
-      <a href="https://github.com/nikosavola/hsl-kaupunkipyora-exporter" target="_blank" rel="noopener">GitHub</a>
-    </footer>
-  </div>
+      <footer>
+        Powered by
+        <a href="https://pyodide.org" target="_blank" rel="noopener">Pyodide</a>
+        ·
+        <a
+          href="https://github.com/nikosavola/hsl-kaupunkipyora-exporter"
+          target="_blank"
+          rel="noopener"
+          >GitHub</a
+        >
+      </footer>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
-  <script src="./app.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
+    <script src="./app.js"></script>
+  </body>
 </html>
