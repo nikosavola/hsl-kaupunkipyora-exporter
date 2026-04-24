@@ -29,6 +29,10 @@ _GRAPHQL_RESOURCE = resources.files("hsl_kaupunkipyora_exporter.graphql").joinpa
 )
 GRAPHQL_QUERY = json.dumps({"query": _GRAPHQL_RESOURCE.read_text(encoding="utf-8")})
 
+_BUNDLED_RESOURCE = resources.files("hsl_kaupunkipyora_exporter.data").joinpath(
+    "stations.json"
+)
+
 
 @dataclass(frozen=True, slots=True)
 class Station:
@@ -89,12 +93,47 @@ def _load_cache() -> list[Station] | None:
         return None
 
 
+def _load_bundled() -> list[Station] | None:
+    """Load the station list bundled with the package as a last-resort fallback."""
+    try:
+        data = json.loads(_BUNDLED_RESOURCE.read_text(encoding="utf-8"))
+        stations = [
+            Station(name=s["name"], lat=s["lat"], lon=s["lon"])
+            for s in data["stations"]
+        ]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        logger.warning("Bundled station data is missing or corrupt.")
+        return None
+    fetched_at = data.get("fetched_at", "unknown")
+    logger.warning(
+        "Using bundled station data (fetched_at: %s). Station list may be outdated.",
+        fetched_at,
+    )
+    return stations
+
+
 def get_stations(refresh: bool = False, api_key: str | None = None) -> list[Station]:
     """Return the station list, using a local cache when available.
+
+    On any live-fetch failure this falls back to the local disk cache (even
+    when *refresh* was requested), and only as a last resort to the dataset
+    bundled with the package.
 
     Args:
         refresh: Force a fresh download even when a cache exists.
         api_key: Digitransit API key. If not provided, uses DIGITRANSIT_API_KEY environment variable.
+
+    Raises:
+        OSError: If the live fetch fails and no cache or bundled fallback is
+            available.
+        json.JSONDecodeError: If the live fetch fails and no cache or bundled
+            fallback is available.
+        KeyError: If the live fetch fails and no cache or bundled fallback is
+            available.
+        TypeError: If the live fetch fails and no cache or bundled fallback is
+            available.
+        ValueError: If the live fetch fails and no cache or bundled fallback is
+            available.
     """
     if not refresh:
         cached = _load_cache()
@@ -103,7 +142,21 @@ def get_stations(refresh: bool = False, api_key: str | None = None) -> list[Stat
             return cached
 
     logger.info("Downloading station list from Digitransit …")
-    stations = list(fetch_stations(api_key=api_key))
+    try:
+        stations = list(fetch_stations(api_key=api_key))
+        if not stations:
+            msg = "Digitransit returned an empty station list"
+            raise ValueError(msg)  # noqa: TRY301
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+        logger.warning("Live fetch failed – checking for a fallback station list.")
+        cached = _load_cache()
+        if cached is not None:
+            logger.warning("Falling back to local station cache.")
+            return cached
+        bundled = _load_bundled()
+        if bundled is not None:
+            return bundled
+        raise
     _save_cache(stations)
     return stations
 

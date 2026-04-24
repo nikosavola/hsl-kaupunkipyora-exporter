@@ -39,6 +39,38 @@ test *args:
 
 # --- Build ---
 
+# Needs the project's own environment (not --no-project) since it imports
+# hsl_kaupunkipyora_exporter.stations, not just the stdlib.
+[doc("Regenerate the bundled station data (requires DIGITRANSIT_API_KEY).")]
+[group('build')]
+[script('uv', 'run', 'python')]
+refresh-stations:
+    import datetime
+    import json
+    import pathlib
+
+    from hsl_kaupunkipyora_exporter.stations import fetch_stations
+
+    stations = list(fetch_stations())
+    assert len(stations) >= 50, f"Refusing to write only {len(stations)} station(s)."
+
+    data = {
+        "fetched_at": datetime.datetime.now(datetime.timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        ),
+        "stations": sorted(
+            ({"name": s.name, "lat": s.lat, "lon": s.lon} for s in stations),
+            key=lambda s: s["name"],
+        ),
+    }
+
+    target = pathlib.Path("src/hsl_kaupunkipyora_exporter/data/stations.json")
+    tmp = target.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(target)
+
+    print("Bundled station data refreshed.")
+
 # Build the Python package
 [group('build')]
 build:
