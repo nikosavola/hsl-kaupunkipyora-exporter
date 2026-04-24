@@ -87,3 +87,67 @@ def test_write_without_output_dir_raises() -> None:
 def test_filename_for_uses_extension() -> None:
     name = TCXWriter().filename_for(_sample_ride())
     assert name.endswith(".tcx")
+
+
+def test_tcx_timestamps_converted_from_helsinki_summer(tcx_writer: TCXWriter) -> None:
+    """Helsinki summer time (EEST, UTC+3) is correctly converted to UTC."""
+    ride = Ride(
+        departure_station="A",
+        departure_time=datetime(2024, 6, 1, 14, 30),
+        return_station="B",
+        return_time=datetime(2024, 6, 1, 14, 45),
+        distance_km=2.0,
+    )
+    tcx_str = tcx_writer._build_tcx(ride, DEP, RET)
+    root = ET.fromstring(tcx_str)  # noqa: S314
+    ns = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
+    id_el = root.find(".//tcx:Id", ns)
+    assert id_el is not None
+    assert id_el.text is not None
+    assert id_el.text.startswith("2024-06-01T11:30:00")
+    time_els = root.findall(".//tcx:Time", ns)
+    assert time_els[0].text is not None
+    assert time_els[0].text.startswith("2024-06-01T11:30:00")
+    assert time_els[1].text is not None
+    assert time_els[1].text.startswith("2024-06-01T11:45:00")
+
+
+def test_tcx_timestamps_converted_from_helsinki_winter(tcx_writer: TCXWriter) -> None:
+    """Helsinki winter time (EET, UTC+2) is correctly converted to UTC."""
+    ride = Ride(
+        departure_station="A",
+        departure_time=datetime(2024, 1, 15, 10, 0),
+        return_station="B",
+        return_time=datetime(2024, 1, 15, 10, 20),
+        distance_km=1.5,
+    )
+    tcx_str = tcx_writer._build_tcx(ride, DEP, RET)
+    root = ET.fromstring(tcx_str)  # noqa: S314
+    ns = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
+    id_el = root.find(".//tcx:Id", ns)
+    assert id_el is not None
+    assert id_el.text is not None
+    assert id_el.text.startswith("2024-01-15T08:00:00")
+
+
+def test_tcx_timestamps_dst_fall_back(tcx_writer: TCXWriter) -> None:
+    """Ride spanning the DST fall-back boundary (EEST→EET) on 27 Oct 2024."""
+    ride = Ride(
+        departure_station="A",
+        departure_time=datetime(2024, 10, 27, 3, 30),
+        return_station="B",
+        return_time=datetime(2024, 10, 27, 4, 30),
+        distance_km=3.0,
+    )
+    tcx_str = tcx_writer._build_tcx(ride, DEP, RET)
+    root = ET.fromstring(tcx_str)  # noqa: S314
+    ns = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
+    # 03:30 EEST = 00:30 UTC
+    id_el = root.find(".//tcx:Id", ns)
+    assert id_el is not None
+    assert id_el.text is not None
+    assert id_el.text.startswith("2024-10-27T00:30:00")
+    time_els = root.findall(".//tcx:Time", ns)
+    # 04:30 is after fall-back so EET (UTC+2) = 02:30 UTC
+    assert time_els[1].text is not None
+    assert time_els[1].text.startswith("2024-10-27T02:30:00")

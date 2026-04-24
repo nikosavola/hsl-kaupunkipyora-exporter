@@ -115,3 +115,46 @@ def test_write_without_output_dir_raises() -> None:
 def test_filename_for_uses_extension() -> None:
     name = GPXWriter().filename_for(_sample_ride())
     assert name.endswith(".gpx")
+
+
+def test_gpx_timestamps_converted_from_helsinki_summer(gpx_writer: GPXWriter) -> None:
+    """Helsinki summer time (EEST, UTC+3) is correctly converted to UTC."""
+    ride = Ride(
+        departure_station="A",
+        departure_time=datetime(2024, 6, 1, 14, 30),  # noqa: DTZ001
+        return_station="B",
+        return_time=datetime(2024, 6, 1, 14, 45),  # noqa: DTZ001
+    )
+    gpx = gpx_writer._build_gpx(ride, DEP, RET)
+    pts = gpx.tracks[0].segments[0].points
+    assert pts[0].time == datetime(2024, 6, 1, 11, 30, tzinfo=UTC)
+    assert pts[1].time == datetime(2024, 6, 1, 11, 45, tzinfo=UTC)
+
+
+def test_gpx_timestamps_converted_from_helsinki_winter(gpx_writer: GPXWriter) -> None:
+    """Helsinki winter time (EET, UTC+2) is correctly converted to UTC."""
+    ride = Ride(
+        departure_station="A",
+        departure_time=datetime(2024, 1, 15, 10, 0),  # noqa: DTZ001
+        return_station="B",
+        return_time=datetime(2024, 1, 15, 10, 20),  # noqa: DTZ001
+    )
+    gpx = gpx_writer._build_gpx(ride, DEP, RET)
+    pts = gpx.tracks[0].segments[0].points
+    assert pts[0].time == datetime(2024, 1, 15, 8, 0, tzinfo=UTC)
+    assert pts[1].time == datetime(2024, 1, 15, 8, 20, tzinfo=UTC)
+
+
+def test_gpx_timestamps_dst_fall_back(gpx_writer: GPXWriter) -> None:
+    """Ride spanning the DST fall-back boundary (EEST→EET) on 27 Oct 2024."""
+    ride = Ride(
+        departure_station="A",
+        departure_time=datetime(2024, 10, 27, 3, 30),  # noqa: DTZ001
+        return_station="B",
+        return_time=datetime(2024, 10, 27, 4, 30),  # noqa: DTZ001
+    )
+    gpx = gpx_writer._build_gpx(ride, DEP, RET)
+    pts = gpx.tracks[0].segments[0].points
+    # 03:30 EEST = 00:30 UTC; 04:30 is after fall-back so EET (UTC+2) = 02:30 UTC
+    assert pts[0].time == datetime(2024, 10, 27, 0, 30, tzinfo=UTC)
+    assert pts[1].time == datetime(2024, 10, 27, 2, 30, tzinfo=UTC)
