@@ -69,6 +69,7 @@ HSL Kaupunkipyörä Exporter tukee kolmea eri tapaa reitittää paikkatiedot:
 | `--use-route`        | Käytä HSL:n ehdottamaa pyöräilyreittiä suoran viivan sijaan                    |
 | `--api-key KEY`      | Digitransit API -avain (vaihtoehto `DIGITRANSIT_API_KEY`-ympäristömuuttujalle) |
 | `--refresh-stations` | Pakota pyöräasemien koordinaattilistan uudelleenlataus                         |
+| `-n`, `--dry-run`    | Esikatsele mitkä tiedostot kirjoitettaisiin tai ohitettaisiin                  |
 | `-v`, `--verbose`    | Ota käyttöön laajennettu/debug-lokitus                                         |
 
 ### TCX vs GPX

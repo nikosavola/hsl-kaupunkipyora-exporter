@@ -63,6 +63,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Force re-download of the bike station list from Digitransit.",
     )
     parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="Preview which files would be written or skipped without actually writing.",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -119,7 +125,6 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(1)
 
     lookup = StationLookup(stations)
-
     # Determine path mode from CLI flags
     if args.use_route:
         path_mode = "routed"
@@ -138,5 +143,6 @@ def main(argv: list[str] | None = None) -> None:
         writer,
         path_mode=path_mode,
         api_key=args.api_key,
+        dry_run=args.dry_run,
         on_event=_log_event,
     )

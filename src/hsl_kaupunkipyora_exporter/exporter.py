@@ -38,15 +38,16 @@ def _resolve_ride_stations(
     dep = lookup.find(ride.departure_station)
     if dep is None:
         emit(
-            f"Could not find coordinates for '{ride.departure_station}' "
-            "– skipping ride.",
+            f"[SKIP] {ride.departure_station} → {ride.return_station}"
+            " — unknown departure station",
             "warning",
         )
         return None
     ret = lookup.find(ride.return_station)
     if ret is None:
         emit(
-            f"Could not find coordinates for '{ride.return_station}' – skipping ride.",
+            f"[SKIP] {ride.departure_station} → {ride.return_station}"
+            " — unknown return station",
             "warning",
         )
         return None
@@ -79,6 +80,16 @@ def _fetch_ride_route(
     return route_points
 
 
+def _ride_detail_str(ride: Ride) -> str:
+    """Return a parenthesised summary of distance/duration, or empty string."""
+    details: list[str] = []
+    if ride.distance_km is not None:
+        details.append(f"{ride.distance_km} km")
+    if ride.duration_min is not None:
+        details.append(f"{ride.duration_min} min")
+    return f"  ({', '.join(details)})" if details else ""
+
+
 def export_rides(  # noqa: PLR0913
     rides: Iterable[Ride],
     lookup: StationLookup,
@@ -86,6 +97,7 @@ def export_rides(  # noqa: PLR0913
     *,
     path_mode: Literal["summary", "linear", "routed"] = "summary",
     api_key: str | None = None,
+    dry_run: bool = False,
     on_event: Callable[[ExportEvent], None] | None = None,
 ) -> ExportResult:
     """Iterate *rides*, resolve stations, optionally route, and export.
@@ -99,6 +111,10 @@ def export_rides(  # noqa: PLR0913
             line) or ``"routed"`` (Digitransit cycling route).
         api_key: Digitransit API key, required when *path_mode* is
             ``"routed"``.
+        dry_run: When ``True`` the pipeline runs in full but no files are
+            written to disk, regardless of ``writer.output_dir``. Each ride
+            that would be exported is reported with a ``[WOULD WRITE]``
+            event instead.
         on_event: Optional callback invoked for every notable event (logging,
             progress reporting, etc.).
 
@@ -130,8 +146,11 @@ def export_rides(  # noqa: PLR0913
         )
         filename = writer.filename_for(ride)
 
-        # Write to disk when the writer has an output directory.
-        if writer.output_dir is not None:
+        if dry_run:
+            _emit(f"[WOULD WRITE] {filename}{_ride_detail_str(ride)}")
+        elif writer.output_dir is not None:
+            # Write to disk when the writer has an output directory.
+            writer.output_dir.mkdir(parents=True, exist_ok=True)
             path = writer.output_dir / filename
             path.write_text(xml, encoding="utf-8")
             _emit(f"Wrote {path}")
@@ -141,8 +160,14 @@ def export_rides(  # noqa: PLR0913
         result.files.append((filename, xml))
         result.written += 1
 
-    _emit(
-        f"Done – {result.written} {writer.EXTENSION.upper()} file(s) written, "
-        f"{result.skipped} skipped.",
-    )
+    ext = writer.EXTENSION.upper()
+    if dry_run:
+        _emit(
+            f"Dry run – {result.written} {ext} file(s) would be written, "
+            f"{result.skipped} skipped.",
+        )
+    else:
+        _emit(
+            f"Done – {result.written} {ext} file(s) written, {result.skipped} skipped."
+        )
     return result
