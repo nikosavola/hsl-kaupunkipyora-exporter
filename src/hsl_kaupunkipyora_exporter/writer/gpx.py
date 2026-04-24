@@ -7,8 +7,8 @@ from datetime import UTC
 from typing import TYPE_CHECKING, final, override
 
 import gpxpy.gpx
-from haversine import haversine  # type: ignore[import-untyped]
 
+from hsl_kaupunkipyora_exporter.writer._common import interpolate_route
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
 
 if TYPE_CHECKING:
@@ -95,30 +95,17 @@ class GPXWriter(BaseRideWriter):
                 )
             )
         else:
-            points = [(p.lat, p.lon) for p in route_points]
-            if len(points) < MIN_ROUTE_POINTS:
+            if len(route_points) < MIN_ROUTE_POINTS:
                 # Fallback to straight line
                 return self._build_gpx(
                     ride, departure_coords, return_coords, None, include_points=True
                 )
 
-            distances = [0.0]
-            total_dist = 0.0
-            for i in range(1, len(points)):
-                d = haversine(points[i - 1], points[i])
-                total_dist += d
-                distances.append(total_dist)
-
-            duration_delta = ret_time - dep_time
-            for i, (lat, lon) in enumerate(points):
-                frac = (
-                    distances[i] / total_dist
-                    if total_dist > 0
-                    else (i / (len(points) - 1))
-                )
-                pt_time = dep_time + (duration_delta * frac)
+            for ip in interpolate_route(route_points, dep_time, ret_time):
                 segment.points.append(
-                    gpxpy.gpx.GPXTrackPoint(latitude=lat, longitude=lon, time=pt_time)
+                    gpxpy.gpx.GPXTrackPoint(
+                        latitude=ip.lat, longitude=ip.lon, time=ip.time
+                    )
                 )
 
         return gpx
