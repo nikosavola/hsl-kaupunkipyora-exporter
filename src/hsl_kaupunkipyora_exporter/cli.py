@@ -8,6 +8,7 @@ import os
 import sys
 from pathlib import Path
 
+from hsl_kaupunkipyora_exporter import __version__
 from hsl_kaupunkipyora_exporter.exporter import ExportEvent, export_rides
 from hsl_kaupunkipyora_exporter.parser import RideHistoryParser
 from hsl_kaupunkipyora_exporter.stations import StationLookup, get_stations
@@ -22,6 +23,11 @@ def _build_parser() -> argparse.ArgumentParser:
             "Parse an HSL City Bike ride history file (HTML or plain text) "
             "and export each ride as a Strava-compatible GPX or TCX file."
         ),
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     parser.add_argument(
         "file",

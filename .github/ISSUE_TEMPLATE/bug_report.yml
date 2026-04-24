@@ -21,11 +21,10 @@ body:
     attributes:
       label: CLI command / web action used to reproduce
       description: >
-        Paste the exact CLI command you ran, or describe the steps you took in the web app.
-        Wrap shell commands in backticks.
+        The exact CLI command you ran, or the steps you took in the web app. Wrap commands in backticks.
       placeholder: |
         ```
-        uvx hsl-kaupunkipyora-exporter --input rides.json
+        uvx hsl-kaupunkipyora-exporter rides.txt --linear
         ```
     validations:
       required: true
@@ -35,11 +34,13 @@ body:
     attributes:
       label: Sample input
       description: >
-        Paste a minimal excerpt from your input file that reproduces the problem.
-        **Strip any personally identifying station names or data before posting.**
+        A minimal excerpt from your input that reproduces the problem. Strip personal station names first.
       placeholder: |
-        ```json
-        { "rides": [ … ] }
+        ```
+        Departure station: Kaivopuisto
+        Departure time: 1.6.2024 14:30
+        Return station: Hakaniemi
+        Return time: 1.6.2024 14:45
         ```
     validations:
       required: false
@@ -58,19 +59,18 @@ body:
     attributes:
       label: Python version (CLI) or browser + OS (web app)
       description: >
-        For CLI: run `python --version` or `uvx hsl-kaupunkipyora-exporter --version`.
-        For web app: state your browser and operating system (e.g. "Firefox 125 on macOS 14").
+        Run `python --version` or `uvx hsl-kaupunkipyora-exporter --version`, or state your browser + OS.
       placeholder: "Python 3.12.3  /  Firefox 125 on macOS 14"
     validations:
-      required: true
+      required: false
 
   - type: input
     id: package_version
     attributes:
-      label: Package version
-      description: >
+      label: Package version (CLI only)
+      description: |
         Run `uvx hsl-kaupunkipyora-exporter --version` and paste the output.
-        You can also find the version on [PyPI](https://pypi.org/project/hsl-kaupunkipyora-exporter/).
-      placeholder: "1.2.3"
+        Leave blank if you're using the web app.
+      placeholder: "0.1.1"
     validations:
-      required: true
+      required: false

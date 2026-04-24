@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from hsl_kaupunkipyora_exporter import __version__
 from hsl_kaupunkipyora_exporter.cli import main
 from hsl_kaupunkipyora_exporter.stations import Station
 
@@ -19,6 +20,13 @@ MOCK_STATIONS = [
     Station(name="Kaivopuisto", lat=60.1575, lon=24.9502),
     Station(name="Hakaniemi", lat=60.1790, lon=24.9508),
 ]
+
+
+def test_cli_version_flag(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--version"])
+    assert exc_info.value.code == 0
+    assert __version__ in capsys.readouterr().out
 
 
 def test_cli_writes_tcx_by_default(tmp_path: Path) -> None:

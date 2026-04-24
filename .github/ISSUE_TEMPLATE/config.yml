@@ -6,5 +6,4 @@ contact_links:
   - name: Security Vulnerability
     url: https://github.com/nikosavola/hsl-kaupunkipyora-exporter/security/advisories/new
     about: >
-      Please do not report security vulnerabilities through public issues.
-      Use GitHub Private Vulnerability Reporting instead.
+      Please do not report security vulnerabilities through public issues. Use Private Vulnerability Reporting instead.
