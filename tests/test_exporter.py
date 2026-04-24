@@ -128,7 +128,7 @@ def test_export_rides_path_mode_summary() -> None:
     assert result.written == 1
     _, xml = result.files[0]
     # In summary mode no trackpoints should be present
-    assert "Trackpoint" not in xml or xml.count("<Trackpoint") == 0
+    assert "<Trackpoint" not in xml
 
 
 def test_export_rides_path_mode_linear() -> None:
