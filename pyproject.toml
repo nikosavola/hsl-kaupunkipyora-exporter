@@ -33,6 +33,7 @@ dependencies = [
   "gpxpy>=1.6",
   "haversine>=2.9.0",
   "polyline>=2.0.4",
+  "tzdata>=2024.1",
 ]
 
 [project.urls]
