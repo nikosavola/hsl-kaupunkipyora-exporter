@@ -35,18 +35,19 @@ jobs:
         with:
           persist-credentials: false
 
-      # v4
+      # v4 available
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b
 
+      # v8.1.0 available
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
 
       - name: Build web assets
         run: just build-web
 
-      # v5
+      # v6 available
       - uses: actions/configure-pages@983d7736d32e4d813e2f5d49cb48470083653f06
-      # v5
-      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6ccd46c0ca2d9
+      # v5 available
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: web
 
@@ -63,4 +64,4 @@ jobs:
     steps:
       # v5
       - id: deployment
-        uses: actions/deploy-pages@cd2ce8f367203868f35336918739d69c4b32eeef
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128
