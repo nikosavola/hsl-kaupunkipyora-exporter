@@ -58,7 +58,11 @@ def test_times_are_monotonically_increasing() -> None:
 
 
 def test_midpoint_time_is_interpolated() -> None:
-    """With roughly equal segments the middle point should be near the midpoint in time."""
+    """With roughly equal segments the middle point should be near the midpoint in time.
+
+    Route has 3 nearly equidistant points, so the middle point gets ~50 %
+    of the 15-minute duration → 14:30 + 7:30 ≈ 14:37.
+    """
     result = interpolate_route(ROUTE_3, DEP_TIME, RET_TIME)
     mid = result[1].time
     assert mid.minute == MIDPOINT_MINUTE  # ~14:37:30 for a symmetric 3-point route
@@ -100,3 +104,12 @@ def test_two_points_simple() -> None:
     assert result[-1].time == RET_TIME
     assert result[0].distance_m == pytest.approx(0.0)
     assert result[-1].distance_m > 0
+
+
+def test_single_point_no_division_by_zero() -> None:
+    """A single-point route should not raise and should return dep_time."""
+    pts = [Point(60.0, 24.0)]
+    result = interpolate_route(pts, DEP_TIME, RET_TIME)
+    assert len(result) == 1
+    assert result[0].time == DEP_TIME
+    assert result[0].distance_m == pytest.approx(0.0)
