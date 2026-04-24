@@ -14,11 +14,11 @@ if TYPE_CHECKING:
 #: Tuple of ``(ride, departure_coords, return_coords, route_points, include_points)``
 #: used by :meth:`BaseRideWriter.build_merged`.
 _RideData = tuple[
-    "Ride",
-    "Station",
-    "Station",
-    "list[Point] | None",
-    bool,
+    "Ride",  # ride: the parsed ride record
+    "Station",  # departure_coords: station with lat/lon for departure
+    "Station",  # return_coords: station with lat/lon for return
+    "list[Point] | None",  # route_points: optional routed path coordinates
+    bool,  # include_points: whether to include GPS trackpoints
 ]
 
 

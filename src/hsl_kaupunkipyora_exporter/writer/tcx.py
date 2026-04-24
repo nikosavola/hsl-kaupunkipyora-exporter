@@ -124,7 +124,12 @@ class TCXWriter(BaseRideWriter):
         root = self._make_root()
         activities = ET.SubElement(root, "Activities")
         self._add_activity(
-            activities, ride, departure_coords, return_coords, route_points, include_points
+            activities,
+            ride,
+            departure_coords,
+            return_coords,
+            route_points,
+            include_points,
         )
         return ET.tostring(root, encoding="utf-8", xml_declaration=True).decode("utf-8")
 

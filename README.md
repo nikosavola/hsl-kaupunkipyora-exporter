@@ -75,18 +75,18 @@ The exporter supports three distinct modes for handling geographic data:
 
 ### Options
 
-| Flag                 | Description                                                        |
-| -------------------- | ------------------------------------------------------------------ |
-| `--output-dir DIR`   | Directory to write files into (default: `./tcx_output`)            |
-| `--format FMT`       | Export format: `tcx` (default) or `gpx`.                           |
-| `--linear`           | Include a straight-line path between stations                      |
-| `--use-route`        | Use suggested HSL cycling route instead of a straight line         |
-| `--api-key KEY`      | Digitransit API key (alternative to `DIGITRANSIT_API_KEY` env var) |
-| `--refresh-stations` | Force re-download of the bike station coordinate list              |
-| `-n`, `--dry-run`    | Preview which files would be written or skipped without writing    |
-| `--zip`              | Bundle all exported files into a single `rides.zip` archive        |
+| Flag                 | Description                                                          |
+| -------------------- | -------------------------------------------------------------------- |
+| `--output-dir DIR`   | Directory to write files into (default: `./tcx_output`)              |
+| `--format FMT`       | Export format: `tcx` (default) or `gpx`.                             |
+| `--linear`           | Include a straight-line path between stations                        |
+| `--use-route`        | Use suggested HSL cycling route instead of a straight line           |
+| `--api-key KEY`      | Digitransit API key (alternative to `DIGITRANSIT_API_KEY` env var)   |
+| `--refresh-stations` | Force re-download of the bike station coordinate list                |
+| `-n`, `--dry-run`    | Preview which files would be written or skipped without writing      |
+| `--zip`              | Bundle all exported files into a single `rides.zip` archive          |
 | `--merge`            | Write one file with all rides (multi-track GPX / multi-activity TCX) |
-| `-v`, `--verbose`    | Enable verbose/debug logging                                       |
+| `-v`, `--verbose`    | Enable verbose/debug logging                                         |
 
 ### TCX vs GPX
 

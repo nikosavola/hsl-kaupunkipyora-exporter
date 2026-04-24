@@ -145,7 +145,15 @@ select = [
 combine-as-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"tests/test_*.py" = ["S101", "D102", "D103", "PLC0415", "PLC2701", "PLR6301", "ARG002"]
+"tests/test_*.py" = [
+  "S101",
+  "D102",
+  "D103",
+  "PLC0415",
+  "PLC2701",
+  "PLR6301",
+  "ARG002"
+]
 "tests/web_smoke.py" = ["S101", "T201"]
 
 [tool.ruff.lint.pydocstyle]
