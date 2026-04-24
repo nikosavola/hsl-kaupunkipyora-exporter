@@ -41,6 +41,8 @@ jobs:
 
       - name: Build web assets
         run: just build-web
+        env:
+          DIGITRANSIT_API_KEY: ${{ secrets.DIGITRANSIT_API_KEY }}
 
       # v6
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
