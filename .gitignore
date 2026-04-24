@@ -213,3 +213,8 @@ __marimo__/
 *.tcx
 gpx_output
 tcx_output
+
+# Node.js (linter dev dependencies)
+node_modules/
+package.json
+package-lock.json
