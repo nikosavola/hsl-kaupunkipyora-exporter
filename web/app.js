@@ -21,7 +21,8 @@ const logCard = document.getElementById("logCard");
 
 function log(msg, level = "info") {
   logCard.classList.remove("hidden");
-  const prefix = level === "error" ? "ERROR: " : level === "warn" ? "WARN: " : "";
+  const prefix =
+    level === "error" ? "ERROR: " : level === "warn" ? "WARN: " : "";
   logEl.textContent += prefix + msg + "\n";
   logEl.scrollTop = logEl.scrollHeight;
 }
@@ -32,17 +33,17 @@ globalThis._pyLog = log;
 // ---------------------------------------------------------------------------
 // UI references
 // ---------------------------------------------------------------------------
-const dropZone      = document.getElementById("dropZone");
-const fileInput     = document.getElementById("fileInput");
-const fileNameEl    = document.getElementById("fileName");
-const textInput     = document.getElementById("textInput");
-const formatSelect  = document.getElementById("formatSelect");
-const pathSelect    = document.getElementById("pathSelect");
-const apiKeyInput   = document.getElementById("apiKey");
-const exportBtn     = document.getElementById("exportBtn");
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const fileNameEl = document.getElementById("fileName");
+const textInput = document.getElementById("textInput");
+const formatSelect = document.getElementById("formatSelect");
+const pathSelect = document.getElementById("pathSelect");
+const apiKeyInput = document.getElementById("apiKey");
+const exportBtn = document.getElementById("exportBtn");
 const exportBtnText = document.getElementById("exportBtnText");
-const statusText    = document.getElementById("statusText");
-const resultsDiv    = document.getElementById("results");
+const statusText = document.getElementById("statusText");
+const resultsDiv = document.getElementById("results");
 
 let uploadedContent = null;
 
@@ -55,7 +56,9 @@ fileInput.addEventListener("change", () => {
   fileNameEl.textContent = file.name;
   fileNameEl.classList.remove("hidden");
   const reader = new FileReader();
-  reader.onload = () => { uploadedContent = reader.result; };
+  reader.onload = () => {
+    uploadedContent = reader.result;
+  };
   reader.readAsText(file);
 });
 
@@ -96,7 +99,7 @@ async function loadManifest() {
   if (!resp.ok) {
     throw new Error(
       `Could not load ${MANIFEST_URL} (HTTP ${resp.status}). ` +
-      `Did you run the web build step? Try 'just build-web'.`,
+        `Did you run the web build step? Try 'just build-web'.`,
     );
   }
   return resp.json();
@@ -105,7 +108,9 @@ async function loadManifest() {
 async function loadFallbackStations() {
   const resp = await fetch(STATIONS_FALLBACK_URL);
   if (!resp.ok) {
-    throw new Error(`Fallback station data not available (HTTP ${resp.status})`);
+    throw new Error(
+      `Fallback station data not available (HTTP ${resp.status})`,
+    );
   }
   return resp.json();
 }
@@ -118,7 +123,8 @@ async function initPyodide() {
 
     log("Resolving application wheel …");
     const manifest = await loadManifest();
-    const wheelUrl = new URL(`./dist/${manifest.wheel}`, window.location.href).href;
+    const wheelUrl = new URL(`./dist/${manifest.wheel}`, window.location.href)
+      .href;
 
     log("Installing Python packages …");
     await pyodide.loadPackage("micropip");
@@ -172,7 +178,10 @@ async function runExport() {
 
   const content = uploadedContent || textInput.value.trim();
   if (!content) {
-    log("Please provide ride history data (upload a file or paste text).", "warn");
+    log(
+      "Please provide ride history data (upload a file or paste text).",
+      "warn",
+    );
     return;
   }
 
