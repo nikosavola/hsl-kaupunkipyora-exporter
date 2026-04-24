@@ -8,6 +8,8 @@ const i18n = {
     "header-desc":
       "Export your Helsinki City Bike ride history as Strava-compatible GPX or TCX files — right in your browser.",
     "step1-title": '<span class="step">1</span> Provide ride history',
+    "step1-hint":
+      'Open your <a href="https://www.hsl.fi/en/my-information/citybikes/ride-history" target="_blank" rel="noopener noreferrer">HSL ride history page</a>, then save the whole page as HTML (<kbd>Ctrl+S</kbd>) or copy-paste the ride section below.',
     "drop-zone-text":
       "Drop an HTML or text file here, or <strong>click to browse</strong>",
     "or-divider": "— or paste the text below —",
@@ -64,6 +66,8 @@ const i18n = {
     "header-desc":
       "Muuta HSL:n kaupunkipyörien ajohistoriasi Strava-yhteensopiviksi TCX- tai GPX-tiedostoiksi suoraan selaimessa.",
     "step1-title": '<span class="step">1</span> Anna ajohistoria',
+    "step1-hint":
+      'Avaa <a href="https://www.hsl.fi/omat-tiedot/kaupunkipyorat/matkahistoria" target="_blank" rel="noopener noreferrer">HSL:n ajohistoriasivu</a>, tallenna sitten koko sivu HTML-tiedostona (<kbd>Ctrl+S</kbd>) tai kopioi ajohistorian osuus alle.',
     "drop-zone-text":
       "Pudota HTML- tai tekstitiedosto tähän, tai <strong>selaa klikkaamalla</strong>",
     "or-divider": "— tai liitä teksti alle —",
@@ -120,6 +124,8 @@ const i18n = {
     "header-desc":
       "Exportera din HRT-stadscykel-historik som Strava-kompatibla TCX- eller GPX-filer direkt i din webbläsare.",
     "step1-title": '<span class="step">1</span> Ange resehistorik',
+    "step1-hint":
+      'Öppna din <a href="https://www.hsl.fi/sv/mina-uppgifter/stadscyklar/rental-history" target="_blank" rel="noopener noreferrer">HRT resehistoriksida</a>, spara sedan hela sidan som HTML (<kbd>Ctrl+S</kbd>) eller kopiera och klistra in resedelen nedan.',
     "drop-zone-text":
       "Släpp en HTML- eller textfil här, eller <strong>klicka för att bläddra</strong>",
     "or-divider": "— eller klistra in texten nedan —",
