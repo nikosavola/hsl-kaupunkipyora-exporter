@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, final, override
 
 import gpxpy.gpx
-from haversine import haversine
+from haversine import haversine  # type: ignore[import-untyped]
 
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
 
@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 MIN_ROUTE_POINTS = 2
 
 
+@final
 class GPXWriter(BaseRideWriter):
     """Writer for GPX format."""
 

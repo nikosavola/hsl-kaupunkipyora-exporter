@@ -5,9 +5,9 @@ from __future__ import annotations
 import logging
 import xml.etree.ElementTree as ET  # noqa: S405
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, final, override
 
-from haversine import haversine
+from haversine import haversine  # type: ignore[import-untyped]
 
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
 
@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 MIN_ROUTE_POINTS = 2
 
 
+@final
 class TCXWriter(BaseRideWriter):
     """Writer for TCX format."""
 

@@ -115,7 +115,7 @@ class RideHistoryParser:
 
         # Try to find high-quality labeled data first (screen reader only sections)
         rides: list[Ride] = []
-        seen_keys: set[tuple] = set()
+        seen_keys: set[tuple[str, datetime, str, datetime]] = set()
 
         sr_elements = soup.find_all(
             class_=re.compile(r"screenReaderOnly", re.IGNORECASE)
@@ -171,7 +171,7 @@ class RideHistoryParser:
         )
 
         all_rides: list[Ride] = []
-        seen_keys: set[tuple] = set()
+        seen_keys: set[tuple[str, datetime, str, datetime]] = set()
 
         for chunk in chunks:
             lines = [line.strip() for line in chunk.splitlines() if line.strip()]

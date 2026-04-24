@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import urllib.error
 import urllib.request
 from collections.abc import Generator, Iterable
 from dataclasses import dataclass
@@ -54,9 +55,7 @@ def fetch_stations(api_key: str | None = None) -> Generator[Station]:
     except urllib.error.HTTPError as e:
         if e.code == HTTP_UNAUTHORIZED:
             logger.exception(
-                "Digitransit API access denied (401). "
-                "Please set the DIGITRANSIT_API_KEY environment variable. "
-                "You can get a free key at https://digitransit.fi/en/developers/api-registration/"
+                "Digitransit API access denied (401). Please set the DIGITRANSIT_API_KEY environment variable. You can get a free key at https://digitransit.fi/en/developers/api-registration/"
             )
         raise
 
