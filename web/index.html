@@ -13,10 +13,37 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div class="lang-switcher" role="group" aria-label="Select language">
+      <button class="lang-btn active" data-lang="en" aria-pressed="true">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/b/be/Flag_of_England.svg"
+          alt="UK Flag"
+          class="flag-icon"
+        />
+        EN
+      </button>
+      <button class="lang-btn" data-lang="fi" aria-pressed="false">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Flag_of_Finland.svg"
+          alt="Finland Flag"
+          class="flag-icon"
+        />
+        FI
+      </button>
+      <button class="lang-btn" data-lang="sv" aria-pressed="false">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/d/d1/Flag_of_the_Finland_Swedes.svg"
+          alt="Finland Swedes Flag"
+          class="flag-icon"
+        />
+        SV
+      </button>
+    </div>
+
     <div class="container">
       <header>
         <h1><span class="bike">🚲</span> HSL Kaupunkipyörä Exporter</h1>
-        <p>
+        <p data-i18n="header-desc">
           Export your Helsinki City Bike ride history as Strava-compatible GPX
           or TCX files — right in your browser.
         </p>
@@ -24,19 +51,24 @@
 
       <!-- Step 1: Input -->
       <section class="card">
-        <h2><span class="step">1</span> Provide ride history</h2>
+        <h2 data-i18n="step1-title">
+          <span class="step">1</span> Provide ride history
+        </h2>
         <div class="drop-zone" id="dropZone">
           <div class="icon">📄</div>
-          <div>
+          <div data-i18n="drop-zone-text">
             Drop an HTML or text file here, or <strong>click to browse</strong>
           </div>
           <div class="filename hidden" id="fileName"></div>
           <input type="file" id="fileInput" accept=".html,.htm,.txt,.text" />
         </div>
-        <div class="or-divider">— or paste the text below —</div>
+        <div class="or-divider" data-i18n="or-divider">
+          — or paste the text below —
+        </div>
         <div class="field">
           <textarea
             id="textInput"
+            data-i18n-placeholder="paste-placeholder"
             placeholder="Paste your ride history text here …"
           ></textarea>
         </div>
@@ -44,43 +76,59 @@
 
       <!-- Step 2: Options -->
       <section class="card">
-        <h2><span class="step">2</span> Options</h2>
+        <h2 data-i18n="step2-title"><span class="step">2</span> Options</h2>
         <div class="row">
           <div class="field">
-            <label for="formatSelect">Export format</label>
+            <label for="formatSelect" data-i18n="format-label"
+              >Export format</label
+            >
             <select id="formatSelect">
-              <option value="tcx" selected>TCX (recommended)</option>
-              <option value="gpx">GPX</option>
+              <option value="tcx" data-i18n="format-tcx" selected>
+                TCX (recommended)
+              </option>
+              <option value="gpx" data-i18n="format-gpx">GPX</option>
             </select>
           </div>
           <div class="field">
-            <label for="pathSelect">Path mode</label>
+            <label for="pathSelect" data-i18n="path-label">Path mode</label>
             <select id="pathSelect">
-              <option value="summary" selected>Summary only</option>
-              <option value="linear">Linear path</option>
-              <option value="routed">Routed path (API key required)</option>
+              <option value="summary" data-i18n="path-summary" selected>
+                Summary only
+              </option>
+              <option value="linear" data-i18n="path-linear">
+                Linear path
+              </option>
+              <option value="routed" data-i18n="path-routed">
+                Routed path (API key required)
+              </option>
             </select>
           </div>
         </div>
         <div class="field" style="margin-top: 14px">
           <label for="apiKey"
-            >Digitransit API key
-            <span style="font-weight: normal; color: var(--text-muted)"
+            ><span data-i18n="api-key-label">Digitransit API key</span>
+            <span
+              style="font-weight: normal; color: var(--text-muted)"
+              data-i18n="optional"
               >(optional)</span
             ></label
           >
           <input
             type="password"
             id="apiKey"
+            data-i18n-placeholder="api-key-placeholder"
             placeholder="For station coordinates — get a free key at digitransit.fi"
           />
           <div class="hint">
-            Required for coordinates. Without it, rides that can't be matched to
-            bundled station data will be skipped.
+            <span data-i18n="api-key-hint"
+              >Required for coordinates. Without it, rides that can't be matched
+              to bundled station data will be skipped.</span
+            >
             <a
               href="https://digitransit.fi/en/developers/api-registration/"
               target="_blank"
               rel="noopener"
+              data-i18n="get-key-link"
               >Get a key →</a
             >
           </div>
@@ -89,10 +137,12 @@
 
       <!-- Step 3: Export -->
       <section class="card">
-        <h2><span class="step">3</span> Export</h2>
+        <h2 data-i18n="step3-title"><span class="step">3</span> Export</h2>
         <div class="export-bar">
           <button class="btn btn-primary" id="exportBtn" disabled>
-            <span id="exportBtnText">Loading Pyodide…</span>
+            <span id="exportBtnText" data-i18n="btn-loading"
+              >Loading Pyodide…</span
+            >
           </button>
           <span class="status" id="statusText"></span>
         </div>
@@ -101,12 +151,12 @@
 
       <!-- Log -->
       <section class="card hidden" id="logCard">
-        <h2>Log</h2>
+        <h2 data-i18n="log-title">Log</h2>
         <div id="log"></div>
       </section>
 
       <footer>
-        Powered by
+        <span data-i18n="footer-powered">Powered by</span>
         <a href="https://pyodide.org" target="_blank" rel="noopener">Pyodide</a>
         ·
         <a
