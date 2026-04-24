@@ -5,3 +5,5 @@ rules:
     level: warning
   document-start: disable
   truthy: disable
+  comments:
+    min-spaces-from-content: 1
