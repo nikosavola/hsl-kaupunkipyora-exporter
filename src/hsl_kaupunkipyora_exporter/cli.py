@@ -76,6 +76,16 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Preview which files would be written or skipped without actually writing.",
     )
     parser.add_argument(
+        "--cache-ttl-days",
+        type=int,
+        default=None,
+        metavar="DAYS",
+        help=(
+            "Refresh the station cache after this many days (default: 30). "
+            "Can also be set via HSL_KAUPUNKIPYORA_CACHE_TTL_DAYS."
+        ),
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -149,7 +159,11 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(1)
 
     try:
-        stations = get_stations(refresh=args.refresh_stations, api_key=args.api_key)
+        stations = get_stations(
+            refresh=args.refresh_stations,
+            cache_ttl_days=args.cache_ttl_days,
+            api_key=args.api_key,
+        )
     except Exception:
         logging.exception("Failed to fetch station data")
         sys.exit(1)
