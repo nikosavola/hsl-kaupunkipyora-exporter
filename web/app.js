@@ -43,6 +43,7 @@ const i18n = {
     "status-ready": "{count} file(s) ready",
     "status-error": "Error — see log",
     "btn-download-all": "⬇ Download all files",
+    "btn-download-zip": "⬇ Download ZIP",
     "btn-download": "Download",
     "log-loading-rt": "Loading Pyodide runtime …",
     "log-resolving": "Resolving application wheel …",
@@ -101,6 +102,7 @@ const i18n = {
     "status-ready": "{count} tiedosto(a) valmiina",
     "status-error": "Virhe — katso loki",
     "btn-download-all": "⬇ Lataa kaikki tiedostot",
+    "btn-download-zip": "⬇ Lataa ZIP",
     "btn-download": "Lataa",
     "log-loading-rt": "Ladataan Pyodide-ajoympäristöä …",
     "log-resolving": "Selvitetään sovelluspakettia …",
@@ -159,6 +161,7 @@ const i18n = {
     "status-ready": "{count} fil(er) klara",
     "status-error": "Fel — se loggen",
     "btn-download-all": "⬇ Ladda ner alla filer",
+    "btn-download-zip": "⬇ Ladda ner ZIP",
     "btn-download": "Ladda ner",
     "log-loading-rt": "Laddar Pyodide-miljö …",
     "log-resolving": "Hittar applikationspaket …",
@@ -494,11 +497,13 @@ async function runExport() {
     resultsDiv.classList.remove("hidden");
 
     const files = [];
+    const filePairs = [];
     for (const item of resultList) {
       const [fname, fileContent] = item;
       const blob = new Blob([fileContent], { type: "application/xml" });
       const url = URL.createObjectURL(blob);
       files.push({ fname, url });
+      filePairs.push([fname, fileContent]);
 
       const div = document.createElement("div");
       div.className = "result-item";
@@ -515,11 +520,13 @@ async function runExport() {
     }
 
     if (files.length > 1) {
-      const btn = document.createElement("button");
-      btn.className = "btn btn-download-all";
-      btn.textContent = t("btn-download-all");
-      btn.addEventListener("click", () => downloadAllFiles(files));
-      resultsDiv.appendChild(btn);
+      const zipBtn = document.createElement("button");
+      zipBtn.className = "btn btn-download-all";
+      zipBtn.textContent = t("btn-download-zip");
+      zipBtn.addEventListener("click", () =>
+        downloadZip(filePairs),
+      );
+      resultsDiv.appendChild(zipBtn);
     }
   } catch (err) {
     log(t("log-proc-error", { err: err }), "error");
@@ -530,14 +537,22 @@ async function runExport() {
   }
 }
 
-function downloadAllFiles(files) {
-  for (const { url, fname } of files) {
+function downloadZip(filePairs) {
+  const createZip = pyodide.globals.get("create_zip");
+  try {
+    const jsonStr = JSON.stringify(filePairs);
+    const zipBytes = createZip(jsonStr);
+    const blob = new Blob([zipBytes], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = fname;
+    a.download = "rides.zip";
     document.body.appendChild(a);
     a.click();
     a.remove();
+    URL.revokeObjectURL(url);
+  } finally {
+    createZip.destroy();
   }
 }
 

@@ -8,7 +8,9 @@ station data, options) and the CLI package (parser + writers).
 
 from __future__ import annotations
 
+import io
 import json
+import zipfile
 from typing import TYPE_CHECKING
 
 from hsl_kaupunkipyora_exporter.exporter import ExportEvent, export_rides
@@ -109,3 +111,20 @@ def process_rides(  # noqa: PLR0913, PLR0917
         on_event=_log_event,
     )
     return result.files
+
+
+def create_zip(files_json: str) -> bytes:
+    """Create an in-memory ZIP archive from exported files.
+
+    Args:
+        files_json: JSON-encoded list of ``[filename, xml_content]`` pairs.
+
+    Returns:
+        Raw bytes of a ZIP archive containing the given files.
+    """
+    pairs = json.loads(files_json)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for fname, content in pairs:
+            zf.writestr(fname, content)
+    return buf.getvalue()

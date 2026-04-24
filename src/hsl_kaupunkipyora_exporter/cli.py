@@ -6,6 +6,7 @@ import argparse
 import logging
 import os
 import sys
+import zipfile
 from pathlib import Path
 
 from hsl_kaupunkipyora_exporter import __version__
@@ -80,6 +81,16 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable verbose/debug logging.",
     )
+    parser.add_argument(
+        "--zip",
+        action="store_true",
+        help="Bundle all exported files into a single rides.zip archive.",
+    )
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="Write a single file with all rides (multi-track GPX or multi-activity TCX).",
+    )
     return parser
 
 
@@ -143,7 +154,7 @@ def main(argv: list[str] | None = None) -> None:
     output_dir = Path(args.output_dir)
     writer = TCXWriter(output_dir) if args.format == "tcx" else GPXWriter(output_dir)
 
-    export_rides(
+    result = export_rides(
         rides,
         lookup,
         writer,
@@ -151,4 +162,22 @@ def main(argv: list[str] | None = None) -> None:
         api_key=args.api_key,
         dry_run=args.dry_run,
         on_event=_log_event,
+        collect_ride_data=args.merge,
     )
+    written_paths = [output_dir / filename for filename, _ in result.files]
+
+    # Handle --merge: write a single merged file
+    if args.merge and result.ride_data:
+        merged_xml = writer.build_merged(result.ride_data)
+        merged_path = output_dir / f"merged_rides.{args.format}"
+        merged_path.write_text(merged_xml, encoding="utf-8")
+        written_paths.append(merged_path)
+        logging.info("Wrote merged file %s", merged_path)
+
+    # Handle --zip: bundle all written files into a ZIP archive
+    if args.zip and written_paths:
+        zip_path = output_dir / "rides.zip"
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            for p in written_paths:
+                zf.write(p, p.name)
+        logging.info("Wrote ZIP archive %s", zip_path)

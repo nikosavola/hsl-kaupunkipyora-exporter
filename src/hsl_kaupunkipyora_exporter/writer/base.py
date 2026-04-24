@@ -11,6 +11,16 @@ if TYPE_CHECKING:
     from hsl_kaupunkipyora_exporter.routing import Point
     from hsl_kaupunkipyora_exporter.stations import Station
 
+#: Tuple of ``(ride, departure_coords, return_coords, route_points, include_points)``
+#: used by :meth:`BaseRideWriter.build_merged`.
+_RideData = tuple[
+    "Ride",
+    "Station",
+    "Station",
+    "list[Point] | None",
+    bool,
+]
+
 
 class BaseRideWriter(ABC):
     """Abstract base class for ride writers (GPX, TCX, etc.)."""

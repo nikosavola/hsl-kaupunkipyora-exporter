@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from hsl_kaupunkipyora_exporter.routing import Point
     from hsl_kaupunkipyora_exporter.stations import Station
 
+    from .base import _RideData
+
 logger = logging.getLogger(__name__)
 
 MIN_ROUTE_POINTS = 2
@@ -107,3 +109,24 @@ class GPXWriter(BaseRideWriter):
                 )
 
         return gpx
+
+    def build_merged(self, rides: list[_RideData]) -> str:
+        """Build a single GPX string containing multiple tracks.
+
+        Each ride becomes a separate ``<trk>`` element.
+
+        Args:
+            rides: Sequence of ride data tuples to merge.
+
+        Returns:
+            A GPX XML string with one ``<trk>`` per ride.
+        """
+        merged = gpxpy.gpx.GPX()
+        merged.creator = "hsl-kaupunkipyora-exporter"
+
+        for ride, dep, ret, route_pts, inc_pts in rides:
+            single = self._build_gpx(ride, dep, ret, route_pts, inc_pts)
+            for track in single.tracks:
+                merged.tracks.append(track)
+
+        return merged.to_xml()
