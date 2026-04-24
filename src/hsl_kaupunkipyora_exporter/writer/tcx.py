@@ -6,6 +6,7 @@ import logging
 import xml.etree.ElementTree as ET  # noqa: S405
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, final, override
+from zoneinfo import ZoneInfo
 
 from hsl_kaupunkipyora_exporter.writer._common import interpolate_route
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 MIN_ROUTE_POINTS = 2
+_HELSINKI = ZoneInfo("Europe/Helsinki")
 
 
 @final
@@ -77,7 +79,7 @@ class TCXWriter(BaseRideWriter):
         activities = ET.SubElement(root, "Activities")
         activity = ET.SubElement(activities, "Activity", {"Sport": "Cycling"})
 
-        id_val = ride.departure_time.replace(tzinfo=UTC).isoformat()
+        id_val = ride.departure_time.replace(tzinfo=_HELSINKI).astimezone(UTC).isoformat()
         ET.SubElement(activity, "Id").text = id_val
 
         total_seconds = (ride.return_time - ride.departure_time).total_seconds()
@@ -93,8 +95,8 @@ class TCXWriter(BaseRideWriter):
 
         if include_points:
             track = ET.SubElement(lap, "Track")
-            dep_time = ride.departure_time.replace(tzinfo=UTC)
-            ret_time = ride.return_time.replace(tzinfo=UTC)
+            dep_time = ride.departure_time.replace(tzinfo=_HELSINKI).astimezone(UTC)
+            ret_time = ride.return_time.replace(tzinfo=_HELSINKI).astimezone(UTC)
 
             if not route_points or len(route_points) < MIN_ROUTE_POINTS:
                 self._add_trackpoint(
