@@ -80,16 +80,14 @@ jobs:
         run: just build-web
         env:
           DIGITRANSIT_API_KEY: ${{ secrets.DIGITRANSIT_API_KEY }}
-      - name: Install Playwright
-        run: |
-          uv pip install --system playwright
-          playwright install --with-deps chromium
+      - name: Install Playwright browser
+        run: uv run --group web-test playwright install --with-deps chromium
       - name: Start local server
         run: |
           cd web && python -m http.server 8000 &
           timeout 10 bash -c 'until curl -sf http://localhost:8000/ > /dev/null; do sleep 0.5; done'
       - name: Run smoke test
-        run: python tests/web_smoke.py
+        run: uv run --group web-test python tests/web_smoke.py
       - name: Upload log artifact
         if: always()
         # v7
