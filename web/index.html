@@ -55,14 +55,25 @@
           <span class="step">1</span> Provide ride history
         </h2>
         <div class="hint" data-i18n="step1-hint"></div>
-        <div class="drop-zone" id="dropZone">
+        <button
+          type="button"
+          class="drop-zone"
+          id="dropZone"
+          aria-label="Upload ride history file"
+        >
           <div class="icon">📄</div>
           <div data-i18n="drop-zone-text">
             Drop an HTML or text file here, or <strong>click to browse</strong>
           </div>
           <div class="filename hidden" id="fileName"></div>
-          <input type="file" id="fileInput" accept=".html,.htm,.txt,.text" />
-        </div>
+        </button>
+        <input
+          type="file"
+          id="fileInput"
+          accept=".html,.htm,.txt,.text"
+          class="sr-only"
+          tabindex="-1"
+        />
         <div class="or-divider" data-i18n="or-divider">
           — or paste the text below —
         </div>
@@ -145,7 +156,12 @@
               >Loading Pyodide…</span
             >
           </button>
-          <span class="status" id="statusText"></span>
+          <span
+            class="status"
+            id="statusText"
+            role="status"
+            aria-live="polite"
+          ></span>
         </div>
         <div id="results" class="results hidden"></div>
       </section>
@@ -153,7 +169,7 @@
       <!-- Log -->
       <section class="card hidden" id="logCard">
         <h2 data-i18n="log-title">Log</h2>
-        <div id="log"></div>
+        <div id="log" role="log" aria-live="polite" aria-atomic="false"></div>
       </section>
 
       <footer>

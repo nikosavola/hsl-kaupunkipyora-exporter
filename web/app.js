@@ -297,6 +297,8 @@ let uploadedContent = null;
 // ---------------------------------------------------------------------------
 // File handling
 // ---------------------------------------------------------------------------
+dropZone.addEventListener("click", () => fileInput.click());
+
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
   if (!file) return;
