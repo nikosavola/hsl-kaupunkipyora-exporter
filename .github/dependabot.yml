@@ -8,11 +8,17 @@ updates:
       actions:
         patterns:
           - "*"
+    cooldown:
+      default-days: 7
   - package-ecosystem: uv
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
   - package-ecosystem: pre-commit
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
