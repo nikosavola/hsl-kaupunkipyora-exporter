@@ -7,8 +7,7 @@ import xml.etree.ElementTree as ET  # noqa: S405
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, final, override
 
-from haversine import haversine  # type: ignore[import-untyped]
-
+from hsl_kaupunkipyora_exporter.writer._common import interpolate_route
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
 
 if TYPE_CHECKING:
@@ -120,24 +119,5 @@ class TCXWriter(BaseRideWriter):
         route_points: list[Point],
     ) -> None:
         """Add route points to the TCX track, scaling distance and time."""
-        points = [(p.lat, p.lon) for p in route_points]
-        segment_dists = [0.0]
-        accum_dist = 0.0
-        for i in range(1, len(points)):
-            d = haversine(points[i - 1], points[i])
-            accum_dist += d
-            segment_dists.append(accum_dist)
-
-        target_dist_km = ride_dist_km if ride_dist_km is not None else accum_dist
-        scale = (target_dist_km / accum_dist) if accum_dist > 0 else 1.0
-        duration_delta = ret_time - dep_time
-
-        for i, (lat, lon) in enumerate(points):
-            frac = (
-                segment_dists[i] / accum_dist
-                if accum_dist > 0
-                else (i / (len(points) - 1))
-            )
-            pt_time = dep_time + (duration_delta * frac)
-            pt_dist = segment_dists[i] * scale * 1000.0
-            self._add_trackpoint(track, pt_time, lat, lon, pt_dist)
+        for ip in interpolate_route(route_points, dep_time, ret_time, ride_dist_km):
+            self._add_trackpoint(track, ip.time, ip.lat, ip.lon, ip.distance_m)

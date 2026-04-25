@@ -11,8 +11,8 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+from hsl_kaupunkipyora_exporter.exporter import ExportEvent, export_rides
 from hsl_kaupunkipyora_exporter.parser import RideHistoryParser
-from hsl_kaupunkipyora_exporter.routing import fetch_route
 from hsl_kaupunkipyora_exporter.stations import Station, StationLookup
 from hsl_kaupunkipyora_exporter.writer import GPXWriter, TCXWriter
 
@@ -32,11 +32,18 @@ except ImportError:
 if TYPE_CHECKING:
     from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
 
+_JS_LEVELS = {"warning": "warn"}
+
 
 def _log(msg: str, level: str = "info") -> None:
     """Forward a log message to the JS-side logger."""
     if js is not None:
         js.globalThis._pyLog(msg, level)
+
+
+def _log_event(event: ExportEvent) -> None:
+    """Forward an :class:`ExportEvent` to the JS logger."""
+    _log(event.message, _JS_LEVELS.get(event.level, event.level))
 
 
 def _writer_for(fmt: str) -> BaseRideWriter:
@@ -85,58 +92,20 @@ def process_rides(  # noqa: PLR0913, PLR0917
 
     writer = _writer_for(fmt)
 
-    results: list[tuple[str, str]] = []
-    skipped = 0
+    # Derive path_mode from the boolean flags passed by the JS host.
+    if use_route:
+        path_mode = "routed"
+    elif include_points:
+        path_mode = "linear"
+    else:
+        path_mode = "summary"
 
-    for ride in rides:
-        dep = lookup.find(ride.departure_station)
-        ret = lookup.find(ride.return_station)
-
-        if dep is None:
-            _log(
-                f"Could not find coordinates for '{ride.departure_station}' – skipping.",
-                "warn",
-            )
-            skipped += 1
-            continue
-        if ret is None:
-            _log(
-                f"Could not find coordinates for '{ride.return_station}' – skipping.",
-                "warn",
-            )
-            skipped += 1
-            continue
-
-        route_points = None
-        if use_route:
-            _log(
-                f"Fetching route for {ride.departure_station} → {ride.return_station} …"
-            )
-            try:
-                route_points = fetch_route(
-                    dep.lat, dep.lon, ret.lat, ret.lon, api_key=api_key
-                )
-            except Exception as e:
-                _log(f"Routing logic failed with error: {e}", "error")
-
-            if not route_points:
-                _log(
-                    f"Could not fetch route for '{ride}' – falling back to straight line.",
-                    "warn",
-                )
-
-        xml = writer.build(
-            ride,
-            dep,
-            ret,
-            route_points=route_points,
-            include_points=include_points,
-        )
-        fname = writer.filename_for(ride)
-        results.append((fname, xml))
-        _log(f"Generated {fname}")
-
-    _log(
-        f"Done – {len(results)} {fmt.upper()} file(s) written, {skipped} skipped.",
+    result = export_rides(
+        rides,
+        lookup,
+        writer,
+        path_mode=path_mode,
+        api_key=api_key,
+        on_event=_log_event,
     )
-    return results
+    return result.files
