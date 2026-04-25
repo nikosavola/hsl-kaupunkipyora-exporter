@@ -1,6 +1,10 @@
 """Validation tests using real HSL data files."""
 
+import json
+from pathlib import Path
+
 from hsl_kaupunkipyora_exporter.parser import RideHistoryParser
+from hsl_kaupunkipyora_exporter.stations import Station, StationLookup
 
 EXPECTED_MATKAHISTORIA_RIDES = 7
 
@@ -29,6 +33,26 @@ def test_parse_matkahistoria_se_txt() -> None:
     assert len(rides) == EXPECTED_MATKAHISTORIA_RIDES
     assert rides[0].departure_station == "Apollonkatu"
     assert rides[-1].departure_station == "Venttiilikuja"
+
+
+def test_stations_fixture_covers_matkahistoria() -> None:
+    """The web-smoke fixture must resolve every sample-history station.
+
+    Otherwise the smoke test would silently skip rides without failing —
+    the exact drift scenario this test exists to catch.
+    """
+    fixture_path = Path("tests/test_data/stations_fixture.json")
+    raw = json.loads(fixture_path.read_text(encoding="utf-8"))
+    lookup = StationLookup(Station(**s) for s in raw)
+
+    rides = RideHistoryParser().parse_file("tests/test_data/matkahistoria.txt")
+    missing = {
+        name
+        for ride in rides
+        for name in (ride.departure_station, ride.return_station)
+        if lookup.find(name) is None
+    }
+    assert not missing, f"stations_fixture.json is missing: {sorted(missing)}"
 
 
 def test_parse_matkahistoria_html() -> None:
