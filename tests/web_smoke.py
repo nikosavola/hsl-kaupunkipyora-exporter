@@ -73,7 +73,7 @@ def main() -> int:
             except Exception:
                 log_text = "(could not capture log)"
             log_path = Path("web-smoke-log.txt")
-            log_path.write_text(log_text)
+            log_path.write_text(log_text, encoding="utf-8")
             print(f"Log saved to {log_path}")
 
             browser.close()
