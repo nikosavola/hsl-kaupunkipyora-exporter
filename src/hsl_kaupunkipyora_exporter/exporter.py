@@ -112,8 +112,9 @@ def export_rides(  # noqa: PLR0913
         lookup: Station-name → coordinates resolver.
         writer: The ride writer (GPX or TCX).  When its ``output_dir`` is set
             files are also written to disk.
-        path_mode: ``"summary"`` (no track points), ``"linear"`` (straight
-            line) or ``"routed"`` (Digitransit cycling route).
+        path_mode: ``"summary"`` (no GPS positions; TCX still includes
+            Time-only trackpoints since Strava requires them), ``"linear"``
+            (straight line) or ``"routed"`` (Digitransit cycling route).
         api_key: Digitransit API key, required when *path_mode* is
             ``"routed"``.
         dry_run: When ``True`` the pipeline runs in full but no files are

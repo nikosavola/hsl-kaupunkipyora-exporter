@@ -12,6 +12,8 @@ from hsl_kaupunkipyora_exporter.routing import Point
 from hsl_kaupunkipyora_exporter.stations import Station, StationLookup
 from hsl_kaupunkipyora_exporter.writer import GPXWriter, TCXWriter
 
+EXPECTED_SUMMARY_TRACKPOINT_COUNT = 2
+
 RIDE = Ride(
     departure_station="Kaivopuisto",
     departure_time=datetime(2024, 6, 1, 14, 30),
@@ -154,8 +156,9 @@ def test_export_rides_path_mode_summary() -> None:
 
     assert result.written == 1
     _, xml = result.files[0]
-    # In summary mode no trackpoints should be present
-    assert "<Trackpoint" not in xml
+    # Summary mode still includes a minimal departure/return Track (with
+    # Time elements) since Strava requires it, but no intermediate points.
+    assert xml.count("<Trackpoint") == EXPECTED_SUMMARY_TRACKPOINT_COUNT
 
 
 def test_export_rides_path_mode_linear() -> None:
