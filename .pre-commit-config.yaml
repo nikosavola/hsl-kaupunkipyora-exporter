@@ -126,7 +126,7 @@ repos:
         priority: 10
         args: [--config, .github/eslint.config.js]
         additional_dependencies:
-          - eslint@9.21.0
+          - eslint@10.2.1
           - "@eslint/js@9.21.0"
           - eslint-config-prettier
           - globals
