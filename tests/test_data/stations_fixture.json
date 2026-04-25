@@ -1,0 +1,12 @@
+[
+  { "name": "Venttiilikuja", "lat": 60.2015, "lon": 24.9412 },
+  { "name": "Kansallismuseo", "lat": 60.1748, "lon": 24.9219 },
+  { "name": "Cygnaeuksenkatu", "lat": 60.1735, "lon": 24.9260 },
+  { "name": "Ratapihantie", "lat": 60.1998, "lon": 24.9345 },
+  { "name": "Kaapelitehdas", "lat": 60.1601, "lon": 24.9110 },
+  { "name": "Sammonpuistikko", "lat": 60.2223, "lon": 24.9291 },
+  { "name": "Hakaniemi (M)", "lat": 60.1790, "lon": 24.9508 },
+  { "name": "Diakoniapuisto", "lat": 60.1723, "lon": 24.9370 },
+  { "name": "Ympyrätalo", "lat": 60.1719, "lon": 24.9351 },
+  { "name": "Apollonkatu", "lat": 60.1740, "lon": 24.9280 }
+]
