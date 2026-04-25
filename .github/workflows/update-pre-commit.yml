@@ -30,10 +30,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
-          git add .pre-commit-config.yaml
+          git add -A
           git commit -m "chore: update pre-commit hooks"
           git push --force origin "$BRANCH"
-          if ! gh pr list --head "$BRANCH" --json number --jq '.[0].number' | grep -q .; then
+          if [ "$(gh pr list --head "$BRANCH" --json number --jq 'length')" = "0" ]; then
             gh pr create --title "chore: update pre-commit hooks" \
               --body "Automated weekly update of pre-commit hook revisions." \
               --head "$BRANCH" --base main
