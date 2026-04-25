@@ -12,6 +12,7 @@ from hsl_kaupunkipyora_exporter.writer import TCXWriter
 
 EXPECTED_DISTANCE_M = "2900.0"
 EXPECTED_DURATION_S = "900.0"
+EXPECTED_SUMMARY_TRACKPOINT_COUNT = 2
 
 
 def _sample_ride() -> Ride:
@@ -59,14 +60,41 @@ def test_tcx_summary_only(tcx_writer: TCXWriter) -> None:
     root = ET.fromstring(tcx_str)  # noqa: S314
     ns = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
 
-    # Track should not be present
+    # Track must be present with departure/return trackpoints for Strava compatibility
     track = root.find(".//tcx:Track", ns)
-    assert track is None
+    assert track is not None
+    trackpoints = track.findall("tcx:Trackpoint", ns)
+    assert len(trackpoints) == EXPECTED_SUMMARY_TRACKPOINT_COUNT
+
+    # Each trackpoint must contain a Time element (required by Strava) and no
+    # Position — summary mode reports distance via DistanceMeters, not GPS.
+    for tp in trackpoints:
+        time_elem = tp.find("tcx:Time", ns)
+        assert time_elem is not None
+        assert time_elem.text is not None
+        assert tp.find("tcx:Position", ns) is None
 
     # Summary data still present
     dist = root.find(".//tcx:DistanceMeters", ns)
     assert dist is not None
     assert dist.text == EXPECTED_DISTANCE_M
+
+
+def test_tcx_linear_includes_positions(tcx_writer: TCXWriter) -> None:
+    """Linear mode must differ from summary mode: it carries GPS positions."""
+    ns = {"tcx": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"}
+    linear_str = tcx_writer._build_tcx(_sample_ride(), DEP, RET, include_points=True)
+    root = ET.fromstring(linear_str)  # noqa: S314
+
+    track = root.find(".//tcx:Track", ns)
+    assert track is not None
+    trackpoints = track.findall("tcx:Trackpoint", ns)
+    assert len(trackpoints) == EXPECTED_SUMMARY_TRACKPOINT_COUNT
+    for tp in trackpoints:
+        assert tp.find("tcx:Position", ns) is not None
+
+    summary_str = tcx_writer._build_tcx(_sample_ride(), DEP, RET, include_points=False)
+    assert linear_str != summary_str
 
 
 def test_build_returns_str_without_output_dir() -> None:

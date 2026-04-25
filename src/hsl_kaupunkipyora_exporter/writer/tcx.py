@@ -44,16 +44,23 @@ class TCXWriter(BaseRideWriter):
     def _add_trackpoint(
         track: ET.Element,
         time: datetime,
-        lat: float,
-        lon: float,
+        lat: float | None,
+        lon: float | None,
         dist_meters: float,
     ) -> None:
-        """Add a trackpoint to the TCX track."""
+        """Add a trackpoint to the TCX track.
+
+        ``Position`` is omitted when *lat*/*lon* are ``None`` — used for
+        summary-mode trackpoints, which carry only the ``Time`` element
+        Strava requires and no GPS geometry to avoid conflicting with the
+        explicit ``DistanceMeters`` summary value.
+        """
         tp = ET.SubElement(track, "Trackpoint")
         ET.SubElement(tp, "Time").text = time.isoformat()
-        pos = ET.SubElement(tp, "Position")
-        ET.SubElement(pos, "LatitudeDegrees").text = str(lat)
-        ET.SubElement(pos, "LongitudeDegrees").text = str(lon)
+        if lat is not None and lon is not None:
+            pos = ET.SubElement(tp, "Position")
+            ET.SubElement(pos, "LatitudeDegrees").text = str(lat)
+            ET.SubElement(pos, "LongitudeDegrees").text = str(lon)
         ET.SubElement(tp, "DistanceMeters").text = f"{dist_meters:.1f}"
 
     def _build_tcx(
@@ -92,20 +99,26 @@ class TCXWriter(BaseRideWriter):
         ET.SubElement(lap, "Intensity").text = "Active"
         ET.SubElement(lap, "TriggerMethod").text = "Manual"
 
-        if include_points:
-            track = ET.SubElement(lap, "Track")
+        track = ET.SubElement(lap, "Track")
 
-            if not route_points or len(route_points) < MIN_ROUTE_POINTS:
-                self._add_trackpoint(
-                    track, dep_time, departure_coords.lat, departure_coords.lon, 0.0
-                )
-                self._add_trackpoint(
-                    track, ret_time, return_coords.lat, return_coords.lon, dist_meters
-                )
-            else:
-                self._add_route_points(
-                    track, dep_time, ret_time, ride.distance_km, route_points
-                )
+        if include_points and route_points and len(route_points) >= MIN_ROUTE_POINTS:
+            self._add_route_points(
+                track, dep_time, ret_time, ride.distance_km, route_points
+            )
+        elif include_points:
+            # Linear mode: no route fetched, so fall back to a straight line
+            # between the two stations.
+            self._add_trackpoint(
+                track, dep_time, departure_coords.lat, departure_coords.lon, 0.0
+            )
+            self._add_trackpoint(
+                track, ret_time, return_coords.lat, return_coords.lon, dist_meters
+            )
+        else:
+            # Summary mode: Time-only trackpoints (no Position) so Strava
+            # accepts the upload without implying a GPS-derived distance.
+            self._add_trackpoint(track, dep_time, None, None, 0.0)
+            self._add_trackpoint(track, ret_time, None, None, dist_meters)
 
         return ET.tostring(root, encoding="utf-8", xml_declaration=True).decode("utf-8")
 
