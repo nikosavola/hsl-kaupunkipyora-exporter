@@ -250,7 +250,7 @@ langBtns.forEach((btn) => {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const PYODIDE_VERSION = "0.27.5";
+const PYODIDE_VERSION = "0.29.3";
 const PYODIDE_INDEX_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
 const DIGITRANSIT_URL = "https://api.digitransit.fi/routing/v2/hsl/gtfs/v1";
 const STATION_QUERY = JSON.stringify({
