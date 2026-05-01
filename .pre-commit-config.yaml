@@ -137,7 +137,7 @@ repos:
         priority: 20
         args: [--config, .stylelintrc.json, --fix]
         additional_dependencies:
-          - stylelint@17.9.0
+          - stylelint@17.9.1
           - stylelint-config-standard@40.0.0
           - stylelint-config-recommended@18.0.0
   - repo: https://github.com/pre-commit/mirrors-prettier
