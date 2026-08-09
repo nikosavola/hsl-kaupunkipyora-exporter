@@ -36,6 +36,20 @@ shared `RideHistoryParser` and writers from a thin adapter. Run it locally with:
 just serve-web  # builds the wheel and serves http://localhost:8000/
 ```
 
+## AI Agent Skill
+
+This repo ships a [skill](skills/hsl-bike-export/SKILL.md) that lets AI Agents like Claude Code run the exporter from
+natural language, mapping requests like "export my HSL rides to GPX" to the right CLI flags, and offering to fetch the
+ride-history page itself via a connected browser tool (e.g. Claude in Chrome) when you agree to it. The instructions
+reference Claude Code's own tools (`ToolSearch`, `Bash`, `Write`), so treat it as Claude-Code-specific for now even
+though it's installed via [`skills`](https://github.com/vercel-labs/skills), which also supports other agents. `skills/`
+in this repo is the source of truth; installing copies it into `.claude/skills/` in your own project. Install it into
+your project with for example:
+
+```bash
+npx skills add nikosavola/hsl-kaupunkipyora-exporter
+```
+
 ## Usage
 
 1. Open your ride history at <https://www.hsl.fi/en/my-information/citybikes/ride-history>.

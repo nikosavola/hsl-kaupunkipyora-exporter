@@ -22,6 +22,20 @@ pip install hsl-kaupunkipyora-exporter
 hsl-kaupunkipyora-exporter rides.txt
 ```
 
+## Tekoälyagentin skilli
+
+Tässä repossa on [skilli](skills/hsl-bike-export/SKILL.md), jonka avulla tekoälyagentit, kuten Claude Code, voivat
+käyttää työkalua luonnollisella kielellä: se muuttaa pyynnöt, kuten ”vie ajoni GPX-muodossa”, oikeiksi
+komentorivivalitsimiksi ja tarjoutuu hakemaan ajohistoriasivun suoraan selaimen kautta (esim. Claude in Chrome), kun
+annat siihen luvan. Ohjeet viittaavat Claude Coden omiin työkaluihin (`ToolSearch`, `Bash`, `Write`), joten skilli on
+toistaiseksi Claude Code -kohtainen, vaikka se asennetaan [`skills`](https://github.com/vercel-labs/skills)-työkalulla,
+joka tukee muitakin agentteja. Tämän repon `skills/`-hakemisto on virallinen versio; asennus kopioi sen omaan
+projektiisi hakemistoon `.claude/skills/`. Asenna se projektiisi esimerkiksi näin:
+
+```bash
+npx skills add nikosavola/hsl-kaupunkipyora-exporter
+```
+
 ## Käyttö
 
 1. Avaa ajohistoriasi osoitteessa <https://www.hsl.fi/omat-tiedot/kaupunkipyorat/matkahistoria>.

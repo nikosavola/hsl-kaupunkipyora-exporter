@@ -17,6 +17,15 @@ Kräver Python 3.13+. Det är enklast att köra verktyget med [`uvx`](https://do
 uvx hsl-kaupunkipyora-exporter rides.txt
 ```
 
+## AI-agent
+
+Det här repot har en [skill](skills/hsl-bike-export/SKILL.md) för Claude Code som kör verktyget via naturligt språk.
+Installera med:
+
+```bash
+npx skills add nikosavola/hsl-kaupunkipyora-exporter
+```
+
 ## Användning
 
 1. Öppna din resehistorik på <https://www.hsl.fi/sv/mina-uppgifter/stadscyklar/rental-history>.
