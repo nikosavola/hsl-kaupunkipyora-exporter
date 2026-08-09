@@ -218,3 +218,8 @@ tcx_output
 node_modules/
 package.json
 package-lock.json
+
+# npx skills add local-install artifacts; skills/ is the single source of truth, don't check in
+# per-agent copies that `npx skills add` generates for local testing
+skills-lock.json
+.claude/skills/
