@@ -199,10 +199,10 @@ function t(key, params = {}) {
 
 function updateTranslations() {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
-    el.innerHTML = t(el.getAttribute("data-i18n"));
+    el.innerHTML = t(el.dataset.i18n);
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
-    el.setAttribute("placeholder", t(el.getAttribute("data-i18n-placeholder")));
+    el.setAttribute("placeholder", t(el.dataset.i18nPlaceholder));
   });
   document.documentElement.lang = currentLang;
 
@@ -231,7 +231,7 @@ function updateTranslations() {
 const langBtns = document.querySelectorAll(".lang-btn");
 langBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
-    const lang = btn.getAttribute("data-lang");
+    const lang = btn.dataset.lang;
     if (!lang || lang === currentLang) return;
 
     // Update active class
@@ -268,8 +268,9 @@ const logCard = document.getElementById("logCard");
 
 function log(msg, level = "info") {
   logCard.classList.remove("hidden");
-  const prefix =
-    level === "error" ? "ERROR: " : level === "warn" ? "WARN: " : "";
+  let prefix = "";
+  if (level === "error") prefix = "ERROR: ";
+  else if (level === "warn") prefix = "WARN: ";
   logEl.textContent += prefix + msg + "\n";
   logEl.scrollTop = logEl.scrollHeight;
 }
@@ -299,16 +300,12 @@ let uploadedContent = null;
 // ---------------------------------------------------------------------------
 dropZone.addEventListener("click", () => fileInput.click());
 
-fileInput.addEventListener("change", () => {
+fileInput.addEventListener("change", async () => {
   const file = fileInput.files[0];
   if (!file) return;
   fileNameEl.textContent = file.name;
   fileNameEl.classList.remove("hidden");
-  const reader = new FileReader();
-  reader.onload = () => {
-    uploadedContent = reader.result;
-  };
-  reader.readAsText(file);
+  uploadedContent = await file.text();
 });
 
 for (const evt of ["dragover", "dragenter"]) {
@@ -410,7 +407,7 @@ async function fetchStations(apiKey) {
   });
   if (!resp.ok) throw new Error(`Station API returned HTTP ${resp.status}`);
   const data = await resp.json();
-  const raw = data && data.data && data.data.vehicleRentalStations;
+  const raw = data?.data?.vehicleRentalStations;
   if (!Array.isArray(raw)) throw new Error("Unexpected station API response");
   return raw;
 }
@@ -535,7 +532,7 @@ function downloadAllFiles(files) {
     a.download = fname;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
   }
 }
 

@@ -432,6 +432,10 @@ footer a:hover,
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
+
+  /* Neutralize <fieldset> UA defaults not covered by the above. */
+  margin: 0;
+  min-inline-size: 0;
 }
 
 .lang-btn {
