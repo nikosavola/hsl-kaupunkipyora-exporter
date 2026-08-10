@@ -1,8 +1,34 @@
-"""Tests for station lookup."""
+"""Tests for station lookup and the Digitransit station-list fetch."""
+
+import json
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from hsl_kaupunkipyora_exporter.stations import Station, StationLookup
+from hsl_kaupunkipyora_exporter.stations import (
+    USER_AGENT,
+    Station,
+    StationLookup,
+    fetch_stations,
+)
+
+
+def _mock_response(data: dict) -> MagicMock:
+    resp = MagicMock()
+    resp.read.return_value = json.dumps(data).encode()
+    resp.__enter__.return_value = resp
+    return resp
+
+
+@patch("hsl_kaupunkipyora_exporter.stations.urllib.request.urlopen")
+def test_fetch_stations_sets_user_agent(mock_urlopen: MagicMock) -> None:
+    mock_urlopen.return_value = _mock_response({"data": {"vehicleRentalStations": []}})
+
+    list(fetch_stations(api_key="test-key"))
+
+    req = mock_urlopen.call_args[0][0]
+    assert req.get_header("User-agent") == USER_AGENT
+    assert req.get_header("Digitransit-subscription-key") == "test-key"
 
 
 @pytest.fixture
