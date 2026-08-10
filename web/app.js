@@ -305,7 +305,12 @@ fileInput.addEventListener("change", async () => {
   if (!file) return;
   fileNameEl.textContent = file.name;
   fileNameEl.classList.remove("hidden");
-  uploadedContent = await file.text();
+  try {
+    uploadedContent = await file.text();
+  } catch (err) {
+    uploadedContent = null;
+    console.error("Failed to read file:", err);
+  }
 });
 
 for (const evt of ["dragover", "dragenter"]) {
