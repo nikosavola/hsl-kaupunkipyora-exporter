@@ -107,8 +107,9 @@ def test_build_returns_str_without_output_dir() -> None:
 
 def test_write_without_output_dir_raises() -> None:
     writer = GPXWriter()
+    ride = _sample_ride()
     with pytest.raises(ValueError, match="output_dir"):
-        writer.write(_sample_ride(), DEP, RET)
+        writer.write(ride, DEP, RET)
 
 
 def test_filename_for_uses_extension() -> None:
