@@ -12,9 +12,12 @@ from typing import NamedTuple
 
 import polyline
 
+from hsl_kaupunkipyora_exporter import __version__
+
 logger = logging.getLogger(__name__)
 
 DIGITRANSIT_URL = "https://api.digitransit.fi/routing/v2/hsl/gtfs/v1"
+USER_AGENT = f"hsl-kaupunkipyora-exporter/{__version__}"
 
 _GRAPHQL_RESOURCE = resources.files("hsl_kaupunkipyora_exporter.graphql").joinpath(
     "route.graphql"
@@ -38,7 +41,7 @@ def fetch_route(
 ) -> list[Point] | None:
     """Fetch a cycling route between two points."""
     api_key = api_key or os.environ.get("DIGITRANSIT_API_KEY")
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT}
     if api_key:
         headers["digitransit-subscription-key"] = api_key
 

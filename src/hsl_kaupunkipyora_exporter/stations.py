@@ -12,9 +12,12 @@ from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
 
+from hsl_kaupunkipyora_exporter import __version__
+
 logger = logging.getLogger(__name__)
 
 DIGITRANSIT_URL = "https://api.digitransit.fi/routing/v2/hsl/gtfs/v1"
+USER_AGENT = f"hsl-kaupunkipyora-exporter/{__version__}"
 HTTP_UNAUTHORIZED = 401
 
 # Cache file lives next to the user's data (XDG_CACHE_HOME or ~/.cache).
@@ -39,7 +42,7 @@ class Station:
 def fetch_stations(api_key: str | None = None) -> Generator[Station]:
     """Download the current station list from the Digitransit API."""
     api_key = api_key or os.environ.get("DIGITRANSIT_API_KEY")
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT}
     if api_key:
         headers["digitransit-subscription-key"] = api_key
 
