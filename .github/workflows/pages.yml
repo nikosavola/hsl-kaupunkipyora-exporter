@@ -17,9 +17,6 @@ on:
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -27,6 +24,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       # v6
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd

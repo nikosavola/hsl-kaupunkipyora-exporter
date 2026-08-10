@@ -1,6 +1,4 @@
 name: Test
-permissions:
-  contents: read
 on:
   pull_request:
   push:
@@ -11,6 +9,8 @@ on:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       # v6
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -21,14 +21,22 @@ jobs:
       # v4 available
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b
       - name: Install stylelint globally
-        run: npm install -g stylelint@16 stylelint-config-standard stylelint-config-recommended
+        run: |
+          npm install -g --ignore-scripts \
+            stylelint@16 \
+            stylelint-config-standard@40.0.0 \
+            stylelint-config-recommended@18.0.0
       # v2
       - uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc
   get-python-versions:
+    permissions:
+      contents: read
     uses: ./.github/workflows/get-python-versions.yml
   test-code:
     needs: get-python-versions
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -59,6 +67,8 @@ jobs:
           path: htmlcov
   test-code-result:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: test-code
     if: always()
     steps:
