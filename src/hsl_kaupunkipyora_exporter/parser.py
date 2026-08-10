@@ -272,11 +272,14 @@ class RideHistoryParser:
 
             if "dist_dur" in fields:
                 val = fields["dist_dur"]
-                dist_match = re.search(r"(\d+([.,]\d+)?)\s*km", val)
+                # Possessive quantifiers: `\d` and `[.,]` are disjoint classes,
+                # so possessive matching never discards a viable match, and it
+                # rules out the superlinear backtracking case entirely.
+                dist_match = re.search(r"(\d++(?:[.,]\d++)?)\s*km", val)
                 if dist_match:
                     ride.distance_km = float(dist_match.group(1).replace(",", "."))
 
-                dur_match = re.search(r"(\d+)\s*min", val)
+                dur_match = re.search(r"(\d++)\s*min", val)
                 if dur_match:
                     ride.duration_min = int(dur_match.group(1))
         except (KeyError, ValueError):

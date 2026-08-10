@@ -7,9 +7,11 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from hsl_kaupunkipyora_exporter.parser import Ride
-from hsl_kaupunkipyora_exporter.routing import fetch_route
-from hsl_kaupunkipyora_exporter.stations import StationLookup
+from hsl_kaupunkipyora_exporter.routing import Point, fetch_route
+from hsl_kaupunkipyora_exporter.stations import Station, StationLookup
 from hsl_kaupunkipyora_exporter.writer.base import BaseRideWriter
+
+EmitFn = Callable[[str, str], None]
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +29,54 @@ class ExportResult:
     written: int = 0
     skipped: int = 0
     files: list[tuple[str, str]] = field(default_factory=list)
+
+
+def _resolve_ride_stations(
+    ride: Ride, lookup: StationLookup, emit: EmitFn
+) -> tuple[Station, Station] | None:
+    """Resolve departure/return coordinates, emitting a skip event if either is missing."""
+    dep = lookup.find(ride.departure_station)
+    if dep is None:
+        emit(
+            f"Could not find coordinates for '{ride.departure_station}' "
+            "– skipping ride.",
+            "warning",
+        )
+        return None
+    ret = lookup.find(ride.return_station)
+    if ret is None:
+        emit(
+            f"Could not find coordinates for '{ride.return_station}' – skipping ride.",
+            "warning",
+        )
+        return None
+    return dep, ret
+
+
+def _fetch_ride_route(
+    ride: Ride,
+    dep: Station,
+    ret: Station,
+    api_key: str | None,
+    emit: EmitFn,
+) -> list[Point] | None:
+    """Fetch a cycling route between two stations, emitting a fallback warning on failure."""
+    emit(
+        f"Fetching route for {ride.departure_station} → {ride.return_station} …",
+        "debug",
+    )
+    try:
+        route_points = fetch_route(dep.lat, dep.lon, ret.lat, ret.lon, api_key=api_key)
+    except Exception as exc:
+        emit(f"Routing request failed: {exc}", "warning")
+        route_points = None
+
+    if not route_points:
+        emit(
+            f"Could not fetch route for '{ride}' – falling back to straight line.",
+            "warning",
+        )
+    return route_points
 
 
 def export_rides(  # noqa: PLR0913
@@ -65,46 +115,15 @@ def export_rides(  # noqa: PLR0913
     result = ExportResult()
 
     for ride in rides:
-        dep = lookup.find(ride.departure_station)
-        ret = lookup.find(ride.return_station)
-
-        if dep is None:
-            _emit(
-                f"Could not find coordinates for '{ride.departure_station}' "
-                "– skipping ride.",
-                "warning",
-            )
+        resolved = _resolve_ride_stations(ride, lookup, _emit)
+        if resolved is None:
             result.skipped += 1
             continue
-        if ret is None:
-            _emit(
-                f"Could not find coordinates for '{ride.return_station}' "
-                "– skipping ride.",
-                "warning",
-            )
-            result.skipped += 1
-            continue
+        dep, ret = resolved
 
         route_points = None
         if use_route:
-            _emit(
-                f"Fetching route for {ride.departure_station} → "
-                f"{ride.return_station} …",
-                "debug",
-            )
-            try:
-                route_points = fetch_route(
-                    dep.lat, dep.lon, ret.lat, ret.lon, api_key=api_key
-                )
-            except Exception as exc:
-                _emit(f"Routing request failed: {exc}", "warning")
-
-            if not route_points:
-                _emit(
-                    f"Could not fetch route for '{ride}' "
-                    "– falling back to straight line.",
-                    "warning",
-                )
+            route_points = _fetch_ride_route(ride, dep, ret, api_key, _emit)
 
         xml = writer.build(
             ride, dep, ret, route_points=route_points, include_points=include_points
