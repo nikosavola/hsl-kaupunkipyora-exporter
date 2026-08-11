@@ -66,23 +66,27 @@ def fetch_route(
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
-            data = json.loads(resp.read())
-
-        itineraries = data.get("data", {}).get("plan", {}).get("itineraries", [])
-        if not itineraries:
-            logger.warning("No route found between coordinates.")
-            return None
-
-        legs = itineraries[0].get("legs", [])
-        all_points = []
-        for leg in legs:
-            points_str = leg.get("legGeometry", {}).get("points", "")
-            if points_str:
-                decoded = polyline.decode(points_str)
-                all_points.extend(starmap(Point, decoded))
+        return _parse_route_response(req)
     except Exception:
         logger.exception("Failed to fetch route")
         return None
-    else:
-        return all_points
+
+
+def _parse_route_response(req: urllib.request.Request) -> list[Point] | None:
+    """Send the routing request and extract points from the first itinerary."""
+    with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+        data = json.loads(resp.read())
+
+    itineraries = data.get("data", {}).get("plan", {}).get("itineraries", [])
+    if not itineraries:
+        logger.warning("No route found between coordinates.")
+        return None
+
+    legs = itineraries[0].get("legs", [])
+    all_points = []
+    for leg in legs:
+        points_str = leg.get("legGeometry", {}).get("points", "")
+        if points_str:
+            decoded = polyline.decode(points_str)
+            all_points.extend(starmap(Point, decoded))
+    return all_points

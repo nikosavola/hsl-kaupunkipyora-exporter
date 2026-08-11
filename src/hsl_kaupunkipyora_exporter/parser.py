@@ -269,20 +269,24 @@ class RideHistoryParser:
                 return_station=fields["return_station"],
                 return_time=datetime.strptime(fields["return_time"], self.DATETIME_FMT),
             )
-
-            if "dist_dur" in fields:
-                val = fields["dist_dur"]
-                # Possessive quantifiers: `\d` and `[.,]` are disjoint classes,
-                # so possessive matching never discards a viable match, and it
-                # rules out the superlinear backtracking case entirely.
-                dist_match = re.search(r"(\d++(?:[.,]\d++)?)\s*km", val)
-                if dist_match:
-                    ride.distance_km = float(dist_match.group(1).replace(",", "."))
-
-                dur_match = re.search(r"(\d++)\s*min", val)
-                if dur_match:
-                    ride.duration_min = int(dur_match.group(1))
         except (KeyError, ValueError):
             return None
-        else:
-            return ride
+
+        if "dist_dur" in fields:
+            self._apply_distance_duration(ride, fields["dist_dur"])
+
+        return ride
+
+    @staticmethod
+    def _apply_distance_duration(ride: Ride, val: str) -> None:
+        """Extract distance/duration from a raw "X km, Y min" string onto ride."""
+        # Possessive quantifiers: `\d` and `[.,]` are disjoint classes,
+        # so possessive matching never discards a viable match, and it
+        # rules out the superlinear backtracking case entirely.
+        dist_match = re.search(r"(\d++(?:[.,]\d++)?)\s*km", val)
+        if dist_match:
+            ride.distance_km = float(dist_match.group(1).replace(",", "."))
+
+        dur_match = re.search(r"(\d++)\s*min", val)
+        if dur_match:
+            ride.duration_min = int(dur_match.group(1))
