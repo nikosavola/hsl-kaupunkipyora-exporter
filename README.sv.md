@@ -3,6 +3,7 @@
 [![en](https://img.shields.io/badge/lang-en-red.svg)](./README.md)
 [![fi](https://img.shields.io/badge/lang-fi-blue.svg)](./README.fi.md)
 [![sv](https://img.shields.io/badge/lang-sv-yellow.svg)](./README.sv.md)
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=nikosavola_hsl-kaupunkipyora-exporter&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nikosavola_hsl-kaupunkipyora-exporter)
 
 Exportera din [HRT-stadscykel](https://www.hsl.fi/sv/mina-uppgifter/stadscyklar/rental-history)-historik som
 Strava-kompatibla TCX- eller GPX-filer.
