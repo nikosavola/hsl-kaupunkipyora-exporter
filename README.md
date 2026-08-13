@@ -6,6 +6,7 @@
 
 [![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=nikosavola_hsl-kaupunkipyora-exporter&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nikosavola_hsl-kaupunkipyora-exporter)
 [![Tests](https://github.com/nikosavola/hsl-kaupunkipyora-exporter/actions/workflows/test.yml/badge.svg)](https://github.com/nikosavola/hsl-kaupunkipyora-exporter/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/nikosavola/hsl-kaupunkipyora-exporter/branch/main/graph/badge.svg)](https://codecov.io/gh/nikosavola/hsl-kaupunkipyora-exporter)
 [![PyPI](https://img.shields.io/pypi/v/hsl-kaupunkipyora-exporter.svg)](https://pypi.org/project/hsl-kaupunkipyora-exporter/)
 [![License](https://img.shields.io/github/license/nikosavola/hsl-kaupunkipyora-exporter.svg)](LICENSE)
 

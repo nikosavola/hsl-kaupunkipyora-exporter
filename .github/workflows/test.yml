@@ -55,9 +55,13 @@ jobs:
       # v4
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3
       - name: Test with pytest
+        env:
+          PYTEST_COV_ARGS: |-
+            --cov=hsl_kaupunkipyora_exporter --cov-branch --cov-report=html
+            --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
         run: |
           just test ${{ (github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest')
-            && '--cov=hsl_kaupunkipyora_exporter --cov-report=html' || '' }}
+            && env.PYTEST_COV_ARGS || '' }}
       - name: Upload coverage report
         if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
         # v7
@@ -65,6 +69,16 @@ jobs:
         with:
           name: coverage-report-${{ matrix.python-version }}
           path: htmlcov
+      - if: github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@e53489f4d376d79066609109e7a95a29eb3740b1 # v7.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
   web-smoke:
     runs-on: ubuntu-latest
     permissions:
