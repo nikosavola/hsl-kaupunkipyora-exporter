@@ -4,6 +4,9 @@
 [![fi](https://img.shields.io/badge/lang-fi-blue.svg)](./README.fi.md)
 [![sv](https://img.shields.io/badge/lang-sv-yellow.svg)](./README.sv.md)
 [![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=nikosavola_hsl-kaupunkipyora-exporter&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nikosavola_hsl-kaupunkipyora-exporter)
+[![Tests](https://github.com/nikosavola/hsl-kaupunkipyora-exporter/actions/workflows/test.yml/badge.svg)](https://github.com/nikosavola/hsl-kaupunkipyora-exporter/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/hsl-kaupunkipyora-exporter.svg)](https://pypi.org/project/hsl-kaupunkipyora-exporter/)
+[![License](https://img.shields.io/github/license/nikosavola/hsl-kaupunkipyora-exporter.svg)](LICENSE)
 
 Muuta [HSL:n kaupunkipyörien](https://www.hsl.fi/omat-tiedot/kaupunkipyorat/matkahistoria) ajohistoriasi
 Strava-yhteensopiviksi TCX- tai GPX-tiedostoiksi.
