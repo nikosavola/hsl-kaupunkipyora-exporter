@@ -13,11 +13,11 @@ jobs:
       contents: read
     steps:
       # v6
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       # v8.1.0 available
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
       # v4 available
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3
       - name: Install stylelint globally
@@ -27,7 +27,7 @@ jobs:
             stylelint-config-standard@40.0.0 \
             stylelint-config-recommended@18.0.0
       # v2
-      - uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d
+      - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece
   get-python-versions:
     permissions:
       contents: read
@@ -44,12 +44,12 @@ jobs:
         python-version: ${{ fromJson(needs.get-python-versions.outputs.python-versions) }}
     steps:
       # v6
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           lfs: true
           persist-credentials: false
       # v8.1.0
-      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
         with:
           python-version: ${{ matrix.python-version }}
       # v4
@@ -71,11 +71,11 @@ jobs:
       contents: read
     steps:
       # v6
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       # v8.1.0
-      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
       - name: Build web app
         run: |
           rm -rf dist web/dist
@@ -99,7 +99,7 @@ jobs:
       - name: Upload log artifact
         if: always()
         # v7
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: web-smoke-log
           path: web-smoke-log.txt
